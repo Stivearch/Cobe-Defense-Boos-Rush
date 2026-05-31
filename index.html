@@ -249,7 +249,6 @@
 </head>
 <body>
 <div id="app">
-  <!-- 登录界面 -->
   <div id="loginScreen" style="display:block;">
     <div class="login">
       <h1 style="font-size:17px;" data-i18n="game_title">🧊 Cube Defense: Boss Rush</h1>
@@ -268,7 +267,6 @@
     </div>
   </div>
 
-  <!-- 主菜单 -->
   <div id="menuScreen" style="display:none;">
     <div class="menu">
       <h1 style="font-size:17px;" data-i18n="menu_title">🎮 主菜单 · 600关挑战</h1>
@@ -284,7 +282,6 @@
     </div>
   </div>
 
-  <!-- 游戏界面 -->
   <div id="gameScreen" style="display:none;">
     <div class="panel">
       <div class="sun">☀️ <span id="sunAmount">150</span></div>
@@ -313,7 +310,6 @@
     <button id="backToMenuFromGame" class="btn" style="margin-top:8px;" data-i18n="back_menu">🏠 返回主菜单</button>
   </div>
 
-  <!-- 模拟股市模块 -->
   <div id="stockModule" style="display:none;"></div>
 </div>
 
@@ -442,71 +438,43 @@
     };
 
     let currentLang = 'zh';
-
     function setLanguage(lang) {
       if (!translations[lang]) return;
       currentLang = lang;
       localStorage.setItem('cdbr_lang', lang);
       applyLanguage(lang);
-      // 重新渲染动态内容
-      if (menuScreen.style.display !== 'none') {
-        renderMenuUpgradePanel();
-      }
-      if (stockModule.style.display !== 'none') {
-        initStockModule();
-      }
-      if (levelsContainer.style.display !== 'none') {
-        renderLevelList();
-      }
+      if (menuScreen.style.display !== 'none') { renderMenuUpgradePanel(); }
+      if (stockModule.style.display !== 'none') { initStockModule(); }
+      if (levelsContainer.style.display !== 'none') { renderLevelList(); }
     }
-
     function applyLanguage(lang) {
       const t = translations[lang];
       document.querySelectorAll('[data-i18n]').forEach(el => {
         const key = el.getAttribute('data-i18n');
         if (t[key]) {
-          // 保留原有的emoji或前缀，仅替换文本部分
-          const orig = el.innerHTML;
-          // 简单替换，假设前面可能有emoji
-          el.childNodes.forEach(node => {
-            if (node.nodeType === 3) { // 文本节点
-              node.textContent = t[key];
-            }
-          });
-          if (el.children.length === 0) {
-            el.innerText = t[key];
-          }
+          el.childNodes.forEach(node => { if (node.nodeType === 3) node.textContent = t[key]; });
+          if (el.children.length === 0) el.innerText = t[key];
         }
       });
-      // 处理placeholder
       document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
         const key = el.getAttribute('data-i18n-placeholder');
         if (t[key]) el.placeholder = t[key];
       });
-      // 更新标题
       document.title = t.game_title || "Cube Defense";
     }
 
-    // 初始化语言选择
-    document.getElementById('langSelect').addEventListener('change', function(e) {
-      setLanguage(e.target.value);
-    });
-
-    // 加载保存的语言设置
+    document.getElementById('langSelect').addEventListener('change', function(e) { setLanguage(e.target.value); });
     const savedLang = localStorage.getItem('cdbr_lang');
     if (savedLang && translations[savedLang]) {
       currentLang = savedLang;
       document.getElementById('langSelect').value = savedLang;
     } else {
-      // 根据浏览器语言自动选择
       const browserLang = navigator.language.split('-')[0];
       if (translations[browserLang]) {
         currentLang = browserLang;
         document.getElementById('langSelect').value = browserLang;
       }
     }
-
-    // 立即应用语言
     setTimeout(() => applyLanguage(currentLang), 0);
 
     function t(key, ...args) {
@@ -563,12 +531,9 @@
     const menuCurrencyEl = $('menuCurrency');
     const menuCompletedEl = $('menuCompleted');
 
-    // ======================= 持久化 =======================
     function saveCurrencyAndUpgrades() {
       if(!currentGameUser) return;
-      try {
-        localStorage.setItem(`cdbr_currency_${currentGameUser}`, JSON.stringify({ currency: globalCurrency, upgrades: plantUpgrades }));
-      } catch(e) {}
+      try { localStorage.setItem(`cdbr_currency_${currentGameUser}`, JSON.stringify({ currency: globalCurrency, upgrades: plantUpgrades })); } catch(e) {}
     }
     function loadCurrencyAndUpgrades() {
       if(!currentGameUser) return;
@@ -581,16 +546,11 @@
     }
     function saveGameLocal() {
       if(!currentGameUser) return;
-      try {
-        localStorage.setItem(`cdbr_save_${currentGameUser}`, JSON.stringify({ wave, sun, currentLevel, completedLevels, bossesDefeatedInLevel }));
-      } catch(e) {}
+      try { localStorage.setItem(`cdbr_save_${currentGameUser}`, JSON.stringify({ wave, sun, currentLevel, completedLevels, bossesDefeatedInLevel })); } catch(e) {}
     }
     function loadGameLocal() {
       if(!currentGameUser) return;
-      try {
-        let raw = localStorage.getItem(`cdbr_save_${currentGameUser}`);
-        if(raw) { let s = JSON.parse(raw); wave = s.wave||1; sun = s.sun||150; currentLevel = s.currentLevel||1; completedLevels = s.completedLevels||0; bossesDefeatedInLevel = s.bossesDefeatedInLevel||0; }
-      } catch(e) {}
+      try { let raw = localStorage.getItem(`cdbr_save_${currentGameUser}`); if(raw) { let s = JSON.parse(raw); wave = s.wave||1; sun = s.sun||150; currentLevel = s.currentLevel||1; completedLevels = s.completedLevels||0; bossesDefeatedInLevel = s.bossesDefeatedInLevel||0; } } catch(e) {}
     }
     function updateCurrencyDisplay() {
       if(currencyAmountEl) currencyAmountEl.innerText = Math.floor(globalCurrency);
@@ -615,7 +575,6 @@
 
     // ======================= 地形主题 =======================
     function getRowsForLevel(level) { return Math.min(45, 9 + Math.floor((level-1)*36/599)); }
-
     const THEMES = [
       { name: "平原", mainGrass: "#6b8e23", altColor1: "#8fbc6e", altColor2: "#4a5d23", waterProb:0.08, lavaProb:0, rockProb:0.04, mudProb:0.04, iceProb:0, mountainProb:0 },
       { name: "山地", mainGrass: "#8b8b7a", altColor1: "#a8a894", altColor2: "#5a5a4a", waterProb:0.02, lavaProb:0, rockProb:0.15, mudProb:0.02, iceProb:0, mountainProb:0.60 },
@@ -630,35 +589,25 @@
       { name: "天空", mainGrass: "#aaccff", altColor1: "#88aaee", altColor2: "#6688cc", waterProb:0.02, lavaProb:0, rockProb:0.02, mudProb:0.02, iceProb:0.10, mountainProb:0 },
       { name: "虚空", mainGrass: "#4a3a6a", altColor1: "#6a4a8a", altColor2: "#8a5aaa", waterProb:0.05, lavaProb:0.05, rockProb:0.15, mudProb:0.05, iceProb:0.08, mountainProb:0 }
     ];
-    function getThemeForLevel(level) {
-      let idx = Math.min(Math.floor((level-1)/50), THEMES.length-1);
-      return THEMES[idx];
-    }
+    function getThemeForLevel(level) { let idx = Math.min(Math.floor((level-1)/50), THEMES.length-1); return THEMES[idx]; }
     function getDaylightTint(level) {
-      let progress = Math.min(1, Math.max(0, (level-1)/TOTAL_LEVELS));
-      let alpha = 0.05 + progress * 0.30;
-      let r,g,b;
+      let progress = Math.min(1, Math.max(0, (level-1)/TOTAL_LEVELS)), alpha = 0.05 + progress * 0.30, r,g,b;
       if(progress < 0.4) { let t = progress/0.4; r = 255 - 40*t; g = 240 - 50*t; b = 200 - 70*t; }
       else if(progress < 0.7) { let t = (progress-0.4)/0.3; r = 215 - 100*t; g = 190 - 110*t; b = 130 - 80*t; }
       else { let t = (progress-0.7)/0.3; r = 115 - 85*t; g = 80 - 60*t; b = 50 - 35*t; }
       r = Math.max(0, Math.floor(r)); g = Math.max(0, Math.floor(g)); b = Math.max(0, Math.floor(b));
       return `rgba(${r},${g},${b},${alpha.toFixed(3)})`;
     }
-
     function generateComplexTerrain(level, rows) {
-      let theme = getThemeForLevel(level);
-      let t = Array(rows).fill().map(()=>Array(COLS).fill('grass'));
-      for(let r=0; r<rows; r++) {
-        for(let c=0; c<COLS; c++) {
-          let rand = Math.random();
-          let cum = 0;
-          cum += theme.waterProb; if(rand < cum) { t[r][c]='water'; continue; }
-          cum += theme.lavaProb; if(rand < cum) { t[r][c]='lava'; continue; }
-          cum += theme.rockProb; if(rand < cum) { t[r][c]='rock'; continue; }
-          cum += theme.mudProb; if(rand < cum) { t[r][c]='mud'; continue; }
-          cum += theme.iceProb; if(rand < cum) { t[r][c]='ice'; continue; }
-          cum += theme.mountainProb; if(rand < cum) { t[r][c]='mountain'; continue; }
-        }
+      let theme = getThemeForLevel(level), t = Array(rows).fill().map(()=>Array(COLS).fill('grass'));
+      for(let r=0; r<rows; r++) for(let c=0; c<COLS; c++) {
+        let rand = Math.random(), cum = 0;
+        cum += theme.waterProb; if(rand < cum) { t[r][c]='water'; continue; }
+        cum += theme.lavaProb; if(rand < cum) { t[r][c]='lava'; continue; }
+        cum += theme.rockProb; if(rand < cum) { t[r][c]='rock'; continue; }
+        cum += theme.mudProb; if(rand < cum) { t[r][c]='mud'; continue; }
+        cum += theme.iceProb; if(rand < cum) { t[r][c]='ice'; continue; }
+        cum += theme.mountainProb; if(rand < cum) { t[r][c]='mountain'; }
       }
       return t;
     }
@@ -666,10 +615,7 @@
     // ======================= BOSS系统 =======================
     function generateBossForLevel(level, index) {
       const namePool = ["虚空领主","熔核巨兽","冰霜巨龙","混沌魔像","末日使者","风暴女王","大地泰坦","暗影刺客"];
-      let difficulty = level/50;
-      let baseHp = 20 + Math.floor(level*1.5) + index*8;
-      let baseSpeed = 0.7 + (level*0.007);
-      let reward = 300 + level*20 + index*60;
+      let difficulty = level/50, baseHp = 20 + Math.floor(level*1.5) + index*8, baseSpeed = 0.7 + (level*0.007), reward = 300 + level*20 + index*60;
       return { name: `${namePool[index%namePool.length]} Lv.${level}`, hp: Math.floor(baseHp*(1+difficulty*0.2)), speed: Math.min(1.25, baseSpeed), color: `hsl(${(level*15+index*40)%360},70%,50%)`, reward: reward };
     }
     function getBossesForLevel(level) { let bosses = []; for(let i=0;i<5;i++) bosses.push(generateBossForLevel(level, i)); return bosses; }
@@ -685,83 +631,39 @@
       if(level > TOTAL_LEVELS) { alert("🏆 恭喜！你已完成全部600关！游戏通关！🏆"); showMenu(); return; }
       if(updateInterval) clearInterval(updateInterval);
       if(animFrameId) cancelAnimationFrame(animFrameId);
-      currentLevel = level;
-      ROWS = getRowsForLevel(level);
-      CELL_H = ROWS <= 18 ? 120 : ROWS <= 30 ? 95 : 72;
-      gameCanvas.height = ROWS * CELL_H;
-      gameCanvas.width = COLS * CELL_W;
+      currentLevel = level; ROWS = getRowsForLevel(level); CELL_H = ROWS <= 18 ? 120 : ROWS <= 30 ? 95 : 72;
+      gameCanvas.height = ROWS * CELL_H; gameCanvas.width = COLS * CELL_W;
       wave = 1; sun = 150; bossesDefeatedInLevel = 0; gameLog = [];
-      terrain = generateComplexTerrain(level, ROWS);
-      grid = Array(ROWS).fill().map(()=>Array(COLS).fill(null));
+      terrain = generateComplexTerrain(level, ROWS); grid = Array(ROWS).fill().map(()=>Array(COLS).fill(null));
       zombies = []; bullets = []; sunDrops = []; screenShake = Array(ROWS).fill(0);
-      logicAccumulator = 0;
-      sunAmountEl.innerText = sun;
-      updateCurrencyDisplay();
+      logicAccumulator = 0; sunAmountEl.innerText = sun; updateCurrencyDisplay();
       gameScreen.style.display = "block"; stockModule.style.display = "none"; menuScreen.style.display = "none";
-      gameState = "PLAYING";
-      addLog(`开始关卡${level} (${ROWS}行) 地形:${getThemeForLevel(level).name}`);
-      let now = performance.now();
-      lastWaveTime = now; lastZombieSpawnTime = now; lastGameUpdate = now;
-
-      function renderLoop() {
-        if(gameState==="PLAYING") draw();
-        animFrameId = requestAnimationFrame(renderLoop);
-      }
+      gameState = "PLAYING"; addLog(`开始关卡${level} (${ROWS}行) 地形:${getThemeForLevel(level).name}`);
+      let now = performance.now(); lastWaveTime = now; lastZombieSpawnTime = now; lastGameUpdate = now;
+      function renderLoop() { if(gameState==="PLAYING") draw(); animFrameId = requestAnimationFrame(renderLoop); }
       renderLoop();
-
       updateInterval = setInterval(() => {
         if (gameState !== "PLAYING") return;
-        const nowTime = performance.now();
-        let delta = nowTime - lastGameUpdate;
-        if (delta > 2000) delta = 2000;
-        logicAccumulator += delta;
-        lastGameUpdate = nowTime;
-
+        const nowTime = performance.now(); let delta = nowTime - lastGameUpdate; if (delta > 2000) delta = 2000;
+        logicAccumulator += delta; lastGameUpdate = nowTime;
         while (logicAccumulator >= FIXED_STEP) {
-          if (nowTime - lastWaveTime >= 10000) {
-            wave++;
-            lastWaveTime += 10000;
-            if (wave > WIN_WAVE) wave = WIN_WAVE;
-          }
-
+          if (nowTime - lastWaveTime >= 10000) { wave++; lastWaveTime += 10000; if (wave > WIN_WAVE) wave = WIN_WAVE; }
           let spawnInterval = Math.max(350, 1500 - Math.floor(currentLevel*1.1) - Math.floor(wave/4));
           if (nowTime - lastZombieSpawnTime >= spawnInterval && zombies.filter(z=>!z.isBoss).length < 16 && !zombies.some(z=>z.isBoss)) {
             let types = ["Normal","Creeper","Enderman","Digger"]; if(wave>=15) types.push("Giant");
-            let type = types[Math.floor(Math.random()*types.length)];
-            let base = ZOMBIE_TYPES[type];
-            let speedBonus = 1 + Math.min(0.55, (currentLevel-1)*0.018);
-            let hpBonus = Math.floor(currentLevel/4);
-            zombies.push({
-              x:COLS*CELL_W, row:Math.floor(Math.random()*ROWS),
-              hp:base.hp+hpBonus, maxHp:base.hp+hpBonus, type,
-              baseSpeed:base.speed*speedBonus, speed:base.speed*speedBonus,
-              walkPhase:Math.random()*100, slowTimer:0, attackCd:0,
-              color:base.color, isBoss:false
-            });
+            let type = types[Math.floor(Math.random()*types.length)], base = ZOMBIE_TYPES[type];
+            let speedBonus = 1 + Math.min(0.55, (currentLevel-1)*0.018), hpBonus = Math.floor(currentLevel/4);
+            zombies.push({ x:COLS*CELL_W, row:Math.floor(Math.random()*ROWS), hp:base.hp+hpBonus, maxHp:base.hp+hpBonus, type, baseSpeed:base.speed*speedBonus, speed:base.speed*speedBonus, walkPhase:Math.random()*100, slowTimer:0, attackCd:0, color:base.color, isBoss:false });
             lastZombieSpawnTime = nowTime;
           }
-
           let bossWaveMap = [10,20,30,40,50];
           if(bossesDefeatedInLevel<5 && wave>=bossWaveMap[bossesDefeatedInLevel] && !zombies.some(z=>z.isBoss)) {
-            let enhancedBosses = getEnhancedBosses(currentLevel);
-            let bossData = enhancedBosses[bossesDefeatedInLevel];
-            let row = Math.floor(Math.random() * ROWS);
-            zombies.push({
-              x:COLS*CELL_W, row, hp:bossData.hp, maxHp:bossData.hp, type:"BOSS",
-              name:bossData.name, color:bossData.color, isBoss:true,
-              baseSpeed:bossData.speed, speed:bossData.speed,
-              walkPhase:Math.random()*100, slowTimer:0, attackCd:0,
-              reward:bossData.reward, attackBonus:1
-            });
+            let enhancedBosses = getEnhancedBosses(currentLevel), bossData = enhancedBosses[bossesDefeatedInLevel], row = Math.floor(Math.random() * ROWS);
+            zombies.push({ x:COLS*CELL_W, row, hp:bossData.hp, maxHp:bossData.hp, type:"BOSS", name:bossData.name, color:bossData.color, isBoss:true, baseSpeed:bossData.speed, speed:bossData.speed, walkPhase:Math.random()*100, slowTimer:0, attackCd:0, reward:bossData.reward, attackBonus:1 });
             addLog(`👾 BOSS登场: ${bossData.name} (HP:${bossData.hp})`);
           }
-
-          if(wave>=WIN_WAVE && zombies.length===0 && bossesDefeatedInLevel>=5) {
-            gameOver(true); return;
-          }
-
-          updateGameLogic(1.0);
-          logicAccumulator -= FIXED_STEP;
+          if(wave>=WIN_WAVE && zombies.length===0 && bossesDefeatedInLevel>=5) { gameOver(true); return; }
+          updateGameLogic(1.0); logicAccumulator -= FIXED_STEP;
         }
         saveGameLocal();
       }, 33);
@@ -769,32 +671,20 @@
 
     function updateGameLogic(timeFactor=1.0) {
       if(gameState!=="PLAYING") return;
-      // 植物行为、子弹、僵尸逻辑（保持原样，省略注释节省空间）
       for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++){
         let p=grid[r][c]; if(!p) continue;
-        if(terrain[r][c]==='lava'){
-          if(p.fireResistTime && p.fireResistTime>0) p.fireResistTime-=timeFactor;
-          else { if(p.type==="Pot" && p.plant) p.plant.hp -= 0.2*timeFactor; else p.hp -= 0.2*timeFactor; if(p.hp<=0 || (p.plant && p.plant.hp<=0)) grid[r][c]=null; continue; }
-        }
+        if(terrain[r][c]==='lava'){ if(p.fireResistTime && p.fireResistTime>0) p.fireResistTime-=timeFactor; else { if(p.type==="Pot" && p.plant) p.plant.hp -= 0.2*timeFactor; else p.hp -= 0.2*timeFactor; if(p.hp<=0 || (p.plant && p.plant.hp<=0)) grid[r][c]=null; continue; } }
         let actual = (p.type==="Pot" && p.plant) ? p.plant : p;
         if(!actual || actual.hp<=0) { if(p.type==="Pot" && p.plant && p.plant.hp<=0) p.plant=null; else if(p.hp<=0) grid[r][c]=null; continue; }
-        if(actual.type==="Pea" && (actual.cd||0)<=0 && zombies.some(z=>z.row===r && z.x<COLS*CELL_W)){
-          let dmg=1+plantUpgrades.pea_damage; bullets.push({x:c*CELL_W+80, y:r*CELL_H+50, row:r, type:"pea", damage:dmg}); let cdBase=22-plantUpgrades.pea_speed*2; actual.cd=Math.max(11, cdBase);
-        } else if(actual.type==="Snow" && (actual.cd||0)<=0 && zombies.some(z=>z.row===r && z.x<COLS*CELL_W)){
-          bullets.push({x:c*CELL_W+80, y:r*CELL_H+50, row:r, type:"ice", damage:1}); actual.cd=26;
-        } else if(actual.type==="Sun" && (actual.sunTimer||0)<=0){
-          let gain=25+plantUpgrades.sun_value*5; sun+=gain; sunDrops.push({x:c*CELL_W+50, y:r*CELL_H+30, life:55}); actual.sunTimer=180; sunAmountEl.innerText=Math.floor(sun);
-        } else if(actual.type==="Potato" && actual.ready===undefined){ actual.ready=true; actual.fuse=85; }
-        else if(actual.type==="Potato" && actual.fuse!==undefined && actual.fuse<=0){
-          for(let i=0;i<zombies.length;i++){ let z=zombies[i]; if(Math.abs(z.row-r)<=1 && Math.abs(Math.floor(z.x/CELL_W)-c)<=1){ zombies.splice(i,1); i--; } }
-          grid[r][c]=null; screenShake[r]=10;
-        } else if(actual.type==="Cherry" && (actual.cd||0)<=0){ zombies=[]; grid[r][c]=null; screenShake[r]=14; }
-        if(actual.cd && actual.cd>0) actual.cd-=timeFactor;
-        if(actual.sunTimer && actual.sunTimer>0) actual.sunTimer-=timeFactor;
-        if(actual.fuse!==undefined && actual.fuse>0) actual.fuse-=timeFactor;
+        if(actual.type==="Pea" && (actual.cd||0)<=0 && zombies.some(z=>z.row===r && z.x<COLS*CELL_W)){ let dmg=1+plantUpgrades.pea_damage; bullets.push({x:c*CELL_W+80, y:r*CELL_H+50, row:r, type:"pea", damage:dmg}); let cdBase=22-plantUpgrades.pea_speed*2; actual.cd=Math.max(11, cdBase); }
+        else if(actual.type==="Snow" && (actual.cd||0)<=0 && zombies.some(z=>z.row===r && z.x<COLS*CELL_W)){ bullets.push({x:c*CELL_W+80, y:r*CELL_H+50, row:r, type:"ice", damage:1}); actual.cd=26; }
+        else if(actual.type==="Sun" && (actual.sunTimer||0)<=0){ let gain=25+plantUpgrades.sun_value*5; sun+=gain; sunDrops.push({x:c*CELL_W+50, y:r*CELL_H+30, life:55}); actual.sunTimer=180; sunAmountEl.innerText=Math.floor(sun); }
+        else if(actual.type==="Potato" && actual.ready===undefined){ actual.ready=true; actual.fuse=85; }
+        else if(actual.type==="Potato" && actual.fuse!==undefined && actual.fuse<=0){ for(let i=0;i<zombies.length;i++){ let z=zombies[i]; if(Math.abs(z.row-r)<=1 && Math.abs(Math.floor(z.x/CELL_W)-c)<=1){ zombies.splice(i,1); i--; } } grid[r][c]=null; screenShake[r]=10; }
+        else if(actual.type==="Cherry" && (actual.cd||0)<=0){ zombies=[]; grid[r][c]=null; screenShake[r]=14; }
+        if(actual.cd && actual.cd>0) actual.cd-=timeFactor; if(actual.sunTimer && actual.sunTimer>0) actual.sunTimer-=timeFactor; if(actual.fuse!==undefined && actual.fuse>0) actual.fuse-=timeFactor;
       }
-      bullets.forEach(b => b.x += (b.type==="ice"?9:12)*timeFactor);
-      bullets = bullets.filter(b => b.x < COLS*CELL_W+60);
+      bullets.forEach(b => b.x += (b.type==="ice"?9:12)*timeFactor); bullets = bullets.filter(b => b.x < COLS*CELL_W+60);
       for(let i=0;i<bullets.length;i++) { let hit = false; for(let j=0;j<zombies.length;j++){ let z=zombies[j]; if(z.row===bullets[i].row && bullets[i].x+10>z.x && bullets[i].x<z.x+CELL_W){ z.hp-=bullets[i].damage; if(bullets[i].type==="ice") z.slowTimer=75; if(z.hp<=0){ if(z.isBoss){ sun+=z.reward; bossesDefeatedInLevel++; sunAmountEl.innerText=Math.floor(sun); } zombies.splice(j,1); } bullets.splice(i,1); i--; hit = true; break; } } if(hit) continue; }
       for(let i=0;i<zombies.length;i++){
         let z=zombies[i]; let effSpeed = z.speed; if(z.slowTimer>0){ effSpeed = z.baseSpeed*0.5; z.slowTimer -= timeFactor; if(z.slowTimer<=0) z.speed=z.baseSpeed; } else z.speed = z.baseSpeed;
@@ -808,8 +698,7 @@
     }
 
     function draw(){
-      ctx.clearRect(0,0,gameCanvas.width,gameCanvas.height);
-      let theme = getThemeForLevel(currentLevel);
+      ctx.clearRect(0,0,gameCanvas.width,gameCanvas.height); let theme = getThemeForLevel(currentLevel);
       for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++){
         let type=terrain[r][c], x=c*CELL_W, y=r*CELL_H;
         if(type==='grass'){ ctx.fillStyle=theme.mainGrass; ctx.fillRect(x,y,CELL_W,CELL_H); ctx.fillStyle=theme.altColor2; for(let i=0;i<25;i++) ctx.fillRect(x+(i*13%CELL_W), y+(i*7%CELL_H),3,3); }
@@ -821,8 +710,7 @@
         else if(type==='mountain'){ ctx.fillStyle="#6a6a5a"; ctx.fillRect(x,y,CELL_W,CELL_H); ctx.fillStyle="#8a8a7a"; for(let i=0;i<30;i++){ let px=x+(i*11%CELL_W), py=y+(i*13%CELL_H); ctx.fillRect(px,py,5,5); } ctx.fillStyle="#4a4a3a"; for(let i=0;i<15;i++){ ctx.fillRect(x+10+(i*37%CELL_W), y+5+(i*29%CELL_H),7,7); } }
       }
       for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++){
-        let cell=grid[r][c]; if(!cell) continue;
-        let x=c*CELL_W, y=r*CELL_H;
+        let cell=grid[r][c]; if(!cell) continue; let x=c*CELL_W, y=r*CELL_H;
         if(cell.type==="Pot"){ ctx.fillStyle="#c97e4a"; ctx.fillRect(x+28,y+28,44,64); ctx.fillStyle="#8b5a30"; ctx.fillRect(x+32,y+32,36,56); if(cell.plant) drawPlant(ctx,x,y,cell.plant); }
         else drawPlant(ctx,x,y,cell);
       }
@@ -841,8 +729,7 @@
         ctx.save(); let shakeOffset = (screenShake[z.row]||0)*(Math.random()-0.5)*2;
         ctx.translate(z.x+CELL_W*0.5, z.row*CELL_H+CELL_H/2+Math.sin(Date.now()*0.005+z.walkPhase)*3+shakeOffset);
         let zw=CELL_W*0.5, zh=CELL_H*0.3; ctx.fillStyle=z.color; ctx.fillRect(-zw/2,-zh/2,zw,zh);
-        ctx.fillStyle="#3a2819"; ctx.fillRect(-zw/2+3,-zh/2-6,zw-6,7);
-        ctx.fillStyle="#2e8b57"; ctx.fillRect(-zw/4,-zh/2+4,6,6); ctx.fillRect(zw/4-6,-zh/2+4,6,6);
+        ctx.fillStyle="#3a2819"; ctx.fillRect(-zw/2+3,-zh/2-6,zw-6,7); ctx.fillStyle="#2e8b57"; ctx.fillRect(-zw/4,-zh/2+4,6,6); ctx.fillRect(zw/4-6,-zh/2+4,6,6);
         ctx.fillStyle="#000"; ctx.fillRect(-zw/4+2,-zh/2+6,2,2); ctx.fillRect(zw/4-4,-zh/2+6,2,2);
         let percent=z.hp/z.maxHp, barW=zw; ctx.fillStyle="#c33"; ctx.fillRect(-barW/2,-zh/2-14,barW*percent,4); ctx.fillStyle="#5a0000"; ctx.fillRect(-barW/2+barW*percent,-zh/2-14,barW*(1-percent),4);
         if(z.isBoss){ ctx.fillStyle="#ffaa22"; ctx.font=`bold ${Math.max(9,CELL_H*0.1)}px 'Press Start 2P'`; ctx.fillText("BOSS",-16,-zh/2-20); }
@@ -855,41 +742,28 @@
 
     function gameOver(win){
       if(gameState!=="PLAYING") return;
-      gameState="END";
-      if(updateInterval) { clearInterval(updateInterval); updateInterval = null; }
+      gameState="END"; if(updateInterval) { clearInterval(updateInterval); updateInterval = null; }
       let coinGain = convertSunToCurrency(sun);
-      if(win){
-        if(wave>=WIN_WAVE && bossesDefeatedInLevel>=5){
-          if(currentLevel > completedLevels){ completedLevels=currentLevel; saveGameLocal(); addLog(`🎉 通关关卡${currentLevel}`); alert(t('victory', currentLevel, coinGain>0?'剩余阳光转换'+coinGain+'游戏币':'')); }
-          else alert(t('victory_again', currentLevel, coinGain>0?'获得'+coinGain+'游戏币':''));
-        }
-      } else { addLog("💀 游戏失败"); alert(t('defeat', coinGain>0?'剩余阳光转换'+coinGain+'游戏币':'')); }
-      updateCurrencyDisplay();
-      setTimeout(()=>showMenu(), 1500);
+      if(win){ if(wave>=WIN_WAVE && bossesDefeatedInLevel>=5){ if(currentLevel > completedLevels){ completedLevels=currentLevel; saveGameLocal(); alert(t('victory', currentLevel, coinGain>0?'剩余阳光转换'+coinGain+'游戏币':'')); } else alert(t('victory_again', currentLevel, coinGain>0?'获得'+coinGain+'游戏币':'')); } }
+      else { addLog("💀 游戏失败"); alert(t('defeat', coinGain>0?'剩余阳光转换'+coinGain+'游戏币':'')); }
+      updateCurrencyDisplay(); setTimeout(()=>showMenu(), 1500);
     }
 
     function showMenu(){
       if(updateInterval) { clearInterval(updateInterval); updateInterval = null; }
       if(animFrameId) { cancelAnimationFrame(animFrameId); animFrameId = null; }
       gameState="MENU"; gameScreen.style.display="none"; stockModule.style.display="none"; menuScreen.style.display="block";
-      updateCurrencyDisplay(); renderMenuUpgradePanel(); saveGameLocal();
-      applyLanguage(currentLang);
+      updateCurrencyDisplay(); renderMenuUpgradePanel(); saveGameLocal(); applyLanguage(currentLang);
     }
 
     function renderLevelList(){
-      if(!levelsContainer) return;
-      levelsContainer.innerHTML="";
+      if(!levelsContainer) return; levelsContainer.innerHTML="";
       for(let i=1;i<=Math.min(completedLevels+1, TOTAL_LEVELS);i++){
-        let theme=getThemeForLevel(i), rows=getRowsForLevel(i);
-        let div=document.createElement("div"); div.className="level-card";
+        let theme=getThemeForLevel(i), rows=getRowsForLevel(i), div=document.createElement("div"); div.className="level-card";
         div.innerHTML=`<div style="font-size:10px;">${t('level_card', i)}</div><div style="font-size:7px;">${theme.name}</div><div style="font-size:7px;">${t('rows_format', rows)}</div>`;
-        div.onclick=()=>{ levelsContainer.style.display="none"; startLevel(i); };
-        levelsContainer.appendChild(div);
+        div.onclick=()=>{ levelsContainer.style.display="none"; startLevel(i); }; levelsContainer.appendChild(div);
       }
-      if(completedLevels>=TOTAL_LEVELS){
-        let div=document.createElement("div"); div.className="level-card"; div.innerHTML="<div>🏆</div><div style='font-size:7px;'>全部通关!</div>";
-        levelsContainer.appendChild(div);
-      }
+      if(completedLevels>=TOTAL_LEVELS){ let div=document.createElement("div"); div.className="level-card"; div.innerHTML="<div>🏆</div><div style='font-size:7px;'>全部通关!</div>"; levelsContainer.appendChild(div); }
     }
 
     function renderMenuUpgradePanel(){
@@ -899,98 +773,44 @@
         <button class="btn upgrade-btn" data-upgrade="pea_speed">🌱${t('upgrade_speed')} (80🪙) [${plantUpgrades.pea_speed}]</button>
         <button class="btn upgrade-btn" data-upgrade="sun_value">🌻${t('upgrade_sun')} (120🪙) [${plantUpgrades.sun_value}]</button>
         <button class="btn upgrade-btn" data-upgrade="nut_hp">🥜${t('upgrade_hp')} (90🪙) [${plantUpgrades.nut_hp}]</button>`;
-      menuUpgradePanel.querySelectorAll('.upgrade-btn').forEach(btn=>{
-        btn.onclick=()=>{
-          let id=btn.dataset.upgrade, cost={pea_damage:100, pea_speed:80, sun_value:120, nut_hp:90}[id];
-          if(applyUpgrade(id,cost)){ alert("✅ 升级成功！"); renderMenuUpgradePanel(); updateCurrencyDisplay(); }
-          else alert("❌ 游戏币不足！");
-        };
-      });
+      menuUpgradePanel.querySelectorAll('.upgrade-btn').forEach(btn=>{ btn.onclick=()=>{ let id=btn.dataset.upgrade, cost={pea_damage:100, pea_speed:80, sun_value:120, nut_hp:90}[id]; if(applyUpgrade(id,cost)){ alert("✅ 升级成功！"); renderMenuUpgradePanel(); updateCurrencyDisplay(); } else alert("❌ 游戏币不足！"); }; });
     }
 
-    // ======================= 模拟股市 =======================
+    // ======================= 模拟股市（已添加用户要求的免责声明） =======================
     const REAL_STOCKS = [
-      { symbol:"600519", name:"贵州茅台", basePrice:1850, volatility:0.018 },
-      { symbol:"000858", name:"五粮液", basePrice:162, volatility:0.022 },
-      { symbol:"300750", name:"宁德时代", basePrice:210, volatility:0.032 },
-      { symbol:"002594", name:"比亚迪", basePrice:268, volatility:0.028 },
-      { symbol:"601318", name:"中国平安", basePrice:48, volatility:0.020 },
-      { symbol:"000333", name:"美的集团", basePrice:62, volatility:0.025 },
-      { symbol:"600036", name:"招商银行", basePrice:39, volatility:0.019 },
-      { symbol:"002415", name:"海康威视", basePrice:36, volatility:0.026 },
-      { symbol:"300059", name:"东方财富", basePrice:18, volatility:0.038 },
-      { symbol:"601012", name:"隆基绿能", basePrice:28, volatility:0.035 },
-      { symbol:"600276", name:"恒瑞医药", basePrice:48, volatility:0.024 },
-      { symbol:"000651", name:"格力电器", basePrice:36, volatility:0.022 },
-      { symbol:"002475", name:"立讯精密", basePrice:32, volatility:0.030 },
-      { symbol:"600900", name:"长江电力", basePrice:24, volatility:0.015 },
-      { symbol:"300124", name:"汇川技术", basePrice:66, volatility:0.028 },
-      { symbol:"601899", name:"紫金矿业", basePrice:12, volatility:0.033 },
-      { symbol:"600809", name:"山西汾酒", basePrice:280, volatility:0.027 },
-      { symbol:"000568", name:"泸州老窖", basePrice:230, volatility:0.026 },
-      { symbol:"002714", name:"牧原股份", basePrice:48, volatility:0.031 },
-      { symbol:"300274", name:"阳光电源", basePrice:98, volatility:0.040 }
+      { symbol:"600519", name:"贵州茅台", basePrice:1850, volatility:0.018 }, { symbol:"000858", name:"五粮液", basePrice:162, volatility:0.022 },
+      { symbol:"300750", name:"宁德时代", basePrice:210, volatility:0.032 }, { symbol:"002594", name:"比亚迪", basePrice:268, volatility:0.028 },
+      { symbol:"601318", name:"中国平安", basePrice:48, volatility:0.020 }, { symbol:"000333", name:"美的集团", basePrice:62, volatility:0.025 },
+      { symbol:"600036", name:"招商银行", basePrice:39, volatility:0.019 }, { symbol:"002415", name:"海康威视", basePrice:36, volatility:0.026 },
+      { symbol:"300059", name:"东方财富", basePrice:18, volatility:0.038 }, { symbol:"601012", name:"隆基绿能", basePrice:28, volatility:0.035 },
+      { symbol:"600276", name:"恒瑞医药", basePrice:48, volatility:0.024 }, { symbol:"000651", name:"格力电器", basePrice:36, volatility:0.022 },
+      { symbol:"002475", name:"立讯精密", basePrice:32, volatility:0.030 }, { symbol:"600900", name:"长江电力", basePrice:24, volatility:0.015 },
+      { symbol:"300124", name:"汇川技术", basePrice:66, volatility:0.028 }, { symbol:"601899", name:"紫金矿业", basePrice:12, volatility:0.033 },
+      { symbol:"600809", name:"山西汾酒", basePrice:280, volatility:0.027 }, { symbol:"000568", name:"泸州老窖", basePrice:230, volatility:0.026 },
+      { symbol:"002714", name:"牧原股份", basePrice:48, volatility:0.031 }, { symbol:"300274", name:"阳光电源", basePrice:98, volatility:0.040 }
     ];
-    let stockList = [];
-    let coinPositions = {};
-    let marginAccount = { debt:0, interestRate:0.0004 };
-    let marketWave = 0;
-    let assetHistory = [];
-    let stockUpdateTimer = null;
-    let equityChart = null;
-    let selectedStockSymbol = null;
+    let stockList = [], coinPositions = {}, marginAccount = { debt:0, interestRate:0.0004 }, marketWave = 0, assetHistory = [], stockUpdateTimer = null, equityChart = null, selectedStockSymbol = null;
 
-    function getTotalAssetValue(){
-      let stockValue = 0;
-      stockList.forEach(s => { stockValue += (coinPositions[s.symbol]||0) * s.price; });
-      return globalCurrency + stockValue - marginAccount.debt;
-    }
+    function getTotalAssetValue(){ let stockValue = 0; stockList.forEach(s => { stockValue += (coinPositions[s.symbol]||0) * s.price; }); return globalCurrency + stockValue - marginAccount.debt; }
 
     function initStockModule(){
-      if(stockList.length===0){
-        REAL_STOCKS.forEach(s => {
-          stockList.push({
-            symbol: s.symbol, name: s.name, price: s.basePrice, basePrice: s.basePrice,
-            volatility: s.volatility, history: [s.basePrice], change:0, changePercent:0,
-            preClose: s.basePrice
-          });
-        });
-      }
+      if(stockList.length===0){ REAL_STOCKS.forEach(s => { stockList.push({ symbol: s.symbol, name: s.name, price: s.basePrice, basePrice: s.basePrice, volatility: s.volatility, history: [s.basePrice], change:0, changePercent:0, preClose: s.basePrice }); }); }
       if(Object.keys(coinPositions).length===0) REAL_STOCKS.forEach(s => coinPositions[s.symbol]=0);
       if(assetHistory.length===0) assetHistory.push({ time: Date.now(), value: getTotalAssetValue() });
-      selectedStockSymbol = stockList[0].symbol;
-      renderStockUI();
-      if(stockUpdateTimer) clearInterval(stockUpdateTimer);
-      stockUpdateTimer = setInterval(updateStockPrices, 3000);
-      updateCurrencyDisplay();
+      selectedStockSymbol = stockList[0].symbol; renderStockUI();
+      if(stockUpdateTimer) clearInterval(stockUpdateTimer); stockUpdateTimer = setInterval(updateStockPrices, 3000); updateCurrencyDisplay();
     }
 
     function updateStockPrices(){
-      marketWave += 0.06;
-      let marketBias = Math.sin(marketWave) * 0.006;
-      stockList.forEach(s => {
-        let randomChange = (Math.random()-0.5)*2*s.volatility;
-        let changePct = randomChange + marketBias;
-        let newPrice = s.price * (1 + changePct);
-        let limitUp = s.preClose * 1.10, limitDown = s.preClose * 0.90;
-        newPrice = Math.min(limitUp, Math.max(limitDown, newPrice));
-        s.price = Math.round(newPrice*100)/100;
-        s.change = Math.round((s.price - s.preClose)*100)/100;
-        s.changePercent = Math.round((s.change / s.preClose)*10000)/100;
-        s.history.push(s.price);
-        if(s.history.length>200) s.history.shift();
-      });
-      marginAccount.debt *= (1 + marginAccount.interestRate);
-      marginAccount.debt = Math.round(marginAccount.debt*100)/100;
-      assetHistory.push({ time: Date.now(), value: getTotalAssetValue() });
-      if(assetHistory.length>300) assetHistory.shift();
-      refreshStockDisplay();
-      updateEquityChart();
+      marketWave += 0.06; let marketBias = Math.sin(marketWave) * 0.006;
+      stockList.forEach(s => { let randomChange = (Math.random()-0.5)*2*s.volatility, changePct = randomChange + marketBias, newPrice = s.price * (1 + changePct), limitUp = s.preClose * 1.10, limitDown = s.preClose * 0.90; newPrice = Math.min(limitUp, Math.max(limitDown, newPrice)); s.price = Math.round(newPrice*100)/100; s.change = Math.round((s.price - s.preClose)*100)/100; s.changePercent = Math.round((s.change / s.preClose)*10000)/100; s.history.push(s.price); if(s.history.length>200) s.history.shift(); });
+      marginAccount.debt *= (1 + marginAccount.interestRate); marginAccount.debt = Math.round(marginAccount.debt*100)/100;
+      assetHistory.push({ time: Date.now(), value: getTotalAssetValue() }); if(assetHistory.length>300) assetHistory.shift();
+      refreshStockDisplay(); updateEquityChart();
     }
 
     function renderStockUI(){
-      let totalStockVal=0; stockList.forEach(s=>totalStockVal+=(coinPositions[s.symbol]||0)*s.price);
-      let totalAsset=getTotalAssetValue();
+      let totalStockVal=0; stockList.forEach(s=>totalStockVal+=(coinPositions[s.symbol]||0)*s.price); let totalAsset=getTotalAssetValue();
       let html = `
       <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px;">
         <h2 style="font-size:13px;color:#ffcc44;">${t('stock_title')}</h2>
@@ -1002,7 +822,10 @@
         <div>🏦 ${t('total_asset')}: <b>${Math.floor(totalAsset)}</b> 🪙</div>
         <div style="color:${marginAccount.debt>0?'#ff6666':'#88cc88'}">💳 ${t('debt')}: <b>${marginAccount.debt.toFixed(1)}</b> 🪙</div>
       </div>
-      <div class="stock-disclaimer">${t('stock_disclaimer')}</div>
+      <div class="stock-disclaimer">
+        ${t('stock_disclaimer')}<br>
+        本模块仅为游戏内虚拟数值演算，与任何证券交易所、金融机构均无关联。严禁将本页面数据用于真实证券投资。
+      </div>
       <div class="stock-grid" style="margin-top:10px;">
         <div class="stock-card">
           <h3>${t('stock_list')}</h3>
@@ -1027,162 +850,51 @@
           <div style="font-size:7px;margin-top:6px;color:#aac;">${t('interest_rate')}: ${(marginAccount.interestRate*100).toFixed(2)}%/周期</div>
         </div>
       </div>
-      <div class="chart-container">
-        <h3 style="font-size:9px;margin-bottom:4px;">📊 总资产曲线</h3>
-        <canvas id="equityChartCanvas"></canvas>
-      </div>`;
-      stockModule.innerHTML = html;
-      refreshStockDisplay();
-      document.getElementById('backToMenuFromStock').onclick = ()=>{
-        if(stockUpdateTimer) clearInterval(stockUpdateTimer); stockUpdateTimer=null;
-        stockModule.style.display="none"; menuScreen.style.display="block"; updateCurrencyDisplay(); renderMenuUpgradePanel();
-        applyLanguage(currentLang);
-      };
-      document.getElementById('btnBuy').onclick = ()=> tradeStock('buy');
-      document.getElementById('btnSell').onclick = ()=> tradeStock('sell');
-      document.getElementById('btnBorrow').onclick = ()=> borrowMargin();
-      document.getElementById('btnRepay').onclick = ()=> repayMargin();
+      <div class="chart-container"><h3 style="font-size:9px;margin-bottom:4px;">📊 总资产曲线</h3><canvas id="equityChartCanvas"></canvas></div>`;
+      stockModule.innerHTML = html; refreshStockDisplay();
+      document.getElementById('backToMenuFromStock').onclick = ()=>{ if(stockUpdateTimer) clearInterval(stockUpdateTimer); stockUpdateTimer=null; stockModule.style.display="none"; menuScreen.style.display="block"; updateCurrencyDisplay(); renderMenuUpgradePanel(); applyLanguage(currentLang); };
+      document.getElementById('btnBuy').onclick = ()=> tradeStock('buy'); document.getElementById('btnSell').onclick = ()=> tradeStock('sell');
+      document.getElementById('btnBorrow').onclick = ()=> borrowMargin(); document.getElementById('btnRepay').onclick = ()=> repayMargin();
       updateEquityChart();
     }
 
     function refreshStockDisplay(){
-      let tbody = document.getElementById('stockTableBody');
-      if(!tbody) return;
-      tbody.innerHTML = stockList.map(s => {
-        let cls = s.change>=0 ? 'up' : 'down', arrow = s.change>=0 ? '▲' : '▼';
-        let selClass = selectedStockSymbol===s.symbol ? 'sel-row' : '';
-        return `<tr class="${selClass}" data-sym="${s.symbol}">
-          <td>${s.symbol}<br><span style="font-size:7px;color:#aaa;">${s.name}</span></td>
-          <td>${s.price.toFixed(2)}</td>
-          <td class="${cls}">${arrow} ${Math.abs(s.changePercent).toFixed(2)}%</td>
-          <td>${coinPositions[s.symbol]||0}</td>
-        </tr>`;
-      }).join('');
+      let tbody = document.getElementById('stockTableBody'); if(!tbody) return;
+      tbody.innerHTML = stockList.map(s => { let cls = s.change>=0 ? 'up' : 'down', arrow = s.change>=0 ? '▲' : '▼', selClass = selectedStockSymbol===s.symbol ? 'sel-row' : ''; return `<tr class="${selClass}" data-sym="${s.symbol}"><td>${s.symbol}<br><span style="font-size:7px;color:#aaa;">${s.name}</span></td><td>${s.price.toFixed(2)}</td><td class="${cls}">${arrow} ${Math.abs(s.changePercent).toFixed(2)}%</td><td>${coinPositions[s.symbol]||0}</td></tr>`; }).join('');
       tbody.querySelectorAll('tr').forEach(row => row.onclick = ()=>{ selectedStockSymbol=row.dataset.sym; document.getElementById('selectedStockLabel').innerText=selectedStockSymbol; refreshStockDisplay(); });
-      let posDiv = document.getElementById('positionsList');
-      if(posDiv){
-        let hasPos=false;
-        posDiv.innerHTML = stockList.filter(s=>(coinPositions[s.symbol]||0)>0).map(s=>{ hasPos=true; return `<div class="position-item"><span>${s.symbol}</span><span>${coinPositions[s.symbol]}股</span><span>≈${Math.floor(coinPositions[s.symbol]*s.price)}🪙</span></div>`; }).join('');
-        if(!hasPos) posDiv.innerHTML = `<div style="font-size:8px;color:#888;">${t('no_position')}</div>`;
-      }
-      let totalStockVal=0; stockList.forEach(s=>totalStockVal+=(coinPositions[s.symbol]||0)*s.price);
-      let totalAsset=getTotalAssetValue();
-      let summaryDiv = stockModule.querySelector('.asset-summary');
-      if(summaryDiv) summaryDiv.innerHTML = `
-        <div>💰 ${t('cash')}: <b>${Math.floor(globalCurrency)}</b> 🪙</div>
-        <div>📦 ${t('stock_value')}: <b>${Math.floor(totalStockVal)}</b> 🪙</div>
-        <div>🏦 ${t('total_asset')}: <b>${Math.floor(totalAsset)}</b> 🪙</div>
-        <div style="color:${marginAccount.debt>0?'#ff6666':'#88cc88'}">💳 ${t('debt')}: <b>${marginAccount.debt.toFixed(1)}</b> 🪙</div>`;
+      let posDiv = document.getElementById('positionsList'); if(posDiv){ let hasPos=false; posDiv.innerHTML = stockList.filter(s=>(coinPositions[s.symbol]||0)>0).map(s=>{ hasPos=true; return `<div class="position-item"><span>${s.symbol}</span><span>${coinPositions[s.symbol]}股</span><span>≈${Math.floor(coinPositions[s.symbol]*s.price)}🪙</span></div>`; }).join(''); if(!hasPos) posDiv.innerHTML = `<div style="font-size:8px;color:#888;">${t('no_position')}</div>`; }
+      let totalStockVal=0; stockList.forEach(s=>totalStockVal+=(coinPositions[s.symbol]||0)*s.price); let totalAsset=getTotalAssetValue();
+      let summaryDiv = stockModule.querySelector('.asset-summary'); if(summaryDiv) summaryDiv.innerHTML = `<div>💰 ${t('cash')}: <b>${Math.floor(globalCurrency)}</b> 🪙</div><div>📦 ${t('stock_value')}: <b>${Math.floor(totalStockVal)}</b> 🪙</div><div>🏦 ${t('total_asset')}: <b>${Math.floor(totalAsset)}</b> 🪙</div><div style="color:${marginAccount.debt>0?'#ff6666':'#88cc88'}">💳 ${t('debt')}: <b>${marginAccount.debt.toFixed(1)}</b> 🪙</div>`;
     }
 
     function tradeStock(action){
-      if(!selectedStockSymbol) { alert(t('select_stock')); return; }
-      let qty = parseInt(document.getElementById('tradeQty')?.value) || 0;
-      if(qty<=0) { alert(t('invalid_amount')); return; }
-      let stock = stockList.find(s=>s.symbol===selectedStockSymbol);
-      if(!stock) return;
-      let totalCost = stock.price * qty;
-      let commission = Math.max(5, totalCost * 0.00025);
-      if(action==='buy'){
-        let needed = totalCost + commission;
-        if(globalCurrency >= needed){
-          globalCurrency -= needed;
-          coinPositions[stock.symbol] = (coinPositions[stock.symbol]||0) + qty;
-          saveCurrencyAndUpgrades(); refreshStockDisplay(); updateCurrencyDisplay();
-        } else alert(t('insufficient_cash', Math.floor(needed)));
-      } else {
-        let held = coinPositions[stock.symbol]||0;
-        if(held >= qty){
-          let stampTax = totalCost * 0.001;
-          let proceeds = totalCost - commission - stampTax;
-          globalCurrency += proceeds;
-          coinPositions[stock.symbol] = held - qty;
-          saveCurrencyAndUpgrades(); refreshStockDisplay(); updateCurrencyDisplay();
-        } else alert(t('insufficient_holdings', held));
-      }
+      if(!selectedStockSymbol) { alert(t('select_stock')); return; } let qty = parseInt(document.getElementById('tradeQty')?.value) || 0; if(qty<=0) { alert(t('invalid_amount')); return; } let stock = stockList.find(s=>s.symbol===selectedStockSymbol); if(!stock) return; let totalCost = stock.price * qty, commission = Math.max(5, totalCost * 0.00025);
+      if(action==='buy'){ let needed = totalCost + commission; if(globalCurrency >= needed){ globalCurrency -= needed; coinPositions[stock.symbol] = (coinPositions[stock.symbol]||0) + qty; saveCurrencyAndUpgrades(); refreshStockDisplay(); updateCurrencyDisplay(); } else alert(t('insufficient_cash', Math.floor(needed))); }
+      else { let held = coinPositions[stock.symbol]||0; if(held >= qty){ let stampTax = totalCost * 0.001, proceeds = totalCost - commission - stampTax; globalCurrency += proceeds; coinPositions[stock.symbol] = held - qty; saveCurrencyAndUpgrades(); refreshStockDisplay(); updateCurrencyDisplay(); } else alert(t('insufficient_holdings', held)); }
       updateEquityChart();
     }
 
-    function borrowMargin(){
-      let amount = parseFloat(document.getElementById('marginAmount')?.value) || 0;
-      if(amount<=0) { alert(t('invalid_amount')); return; }
-      if(amount>50000) { alert(t('borrow_limit')); return; }
-      marginAccount.debt += amount;
-      globalCurrency += amount;
-      saveCurrencyAndUpgrades(); refreshStockDisplay(); updateCurrencyDisplay(); updateEquityChart();
-    }
-
-    function repayMargin(){
-      let amount = parseFloat(document.getElementById('marginAmount')?.value) || 0;
-      if(amount<=0) { alert(t('invalid_amount')); return; }
-      if(amount > marginAccount.debt) amount = marginAccount.debt;
-      if(globalCurrency >= amount){
-        globalCurrency -= amount;
-        marginAccount.debt -= amount;
-        marginAccount.debt = Math.round(marginAccount.debt*100)/100;
-        saveCurrencyAndUpgrades(); refreshStockDisplay(); updateCurrencyDisplay(); updateEquityChart();
-      } else alert(t('insufficient_cash', Math.floor(amount)));
-    }
+    function borrowMargin(){ let amount = parseFloat(document.getElementById('marginAmount')?.value) || 0; if(amount<=0) { alert(t('invalid_amount')); return; } if(amount>50000) { alert(t('borrow_limit')); return; } marginAccount.debt += amount; globalCurrency += amount; saveCurrencyAndUpgrades(); refreshStockDisplay(); updateCurrencyDisplay(); updateEquityChart(); }
+    function repayMargin(){ let amount = parseFloat(document.getElementById('marginAmount')?.value) || 0; if(amount<=0) { alert(t('invalid_amount')); return; } if(amount > marginAccount.debt) amount = marginAccount.debt; if(globalCurrency >= amount){ globalCurrency -= amount; marginAccount.debt -= amount; marginAccount.debt = Math.round(marginAccount.debt*100)/100; saveCurrencyAndUpgrades(); refreshStockDisplay(); updateCurrencyDisplay(); updateEquityChart(); } else alert(t('insufficient_cash', Math.floor(amount))); }
 
     function updateEquityChart(){
-      let canvas = document.getElementById('equityChartCanvas');
-      if(!canvas || assetHistory.length<2) return;
-      if(equityChart) equityChart.destroy();
-      let labels = assetHistory.map(a=>new Date(a.time).toLocaleTimeString());
-      let data = assetHistory.map(a=>Math.floor(a.value));
-      equityChart = new Chart(canvas, {
-        type:'line', data:{ labels:labels.slice(-60), datasets:[{ label:'总资产(🪙)', data:data.slice(-60), borderColor:'#00d2d3', backgroundColor:'rgba(0,210,211,0.1)', fill:true, tension:0.3, pointRadius:0, borderWidth:1.5 }] },
-        options:{ responsive:true, maintainAspectRatio:false, animation:{duration:200}, plugins:{legend:{display:false}}, scales:{ x:{ ticks:{color:'#888', font:{size:7}, maxTicksLimit:8}, grid:{color:'#1a2a3a'} }, y:{ ticks:{color:'#888', font:{size:7}, callback:v=>Math.floor(v)+'🪙'}, grid:{color:'#1a2a3a'} } } }
-      });
+      let canvas = document.getElementById('equityChartCanvas'); if(!canvas || assetHistory.length<2) return; if(equityChart) equityChart.destroy();
+      let labels = assetHistory.map(a=>new Date(a.time).toLocaleTimeString()), data = assetHistory.map(a=>Math.floor(a.value));
+      equityChart = new Chart(canvas, { type:'line', data:{ labels:labels.slice(-60), datasets:[{ label:'总资产(🪙)', data:data.slice(-60), borderColor:'#00d2d3', backgroundColor:'rgba(0,210,211,0.1)', fill:true, tension:0.3, pointRadius:0, borderWidth:1.5 }] }, options:{ responsive:true, maintainAspectRatio:false, animation:{duration:200}, plugins:{legend:{display:false}}, scales:{ x:{ ticks:{color:'#888', font:{size:7}, maxTicksLimit:8}, grid:{color:'#1a2a3a'} }, y:{ ticks:{color:'#888', font:{size:7}, callback:v=>Math.floor(v)+'🪙'}, grid:{color:'#1a2a3a'} } } } });
     }
 
     // ======================= 事件绑定 =======================
     function bindAllEvents(){
-      document.querySelectorAll("#plantButtons .btn[data-plant]").forEach(btn => {
-        btn.onclick = ()=>{ document.querySelectorAll("#plantButtons .btn[data-plant]").forEach(b=>b.classList.remove("sel")); btn.classList.add("sel"); selectedPlant=btn.dataset.plant; };
-      });
-      document.getElementById('showUpgradeBtn').onclick = ()=>{
-        upgradePanel.style.display = upgradePanel.style.display==="none" ? "flex" : "none";
-        upgradePanel.querySelectorAll('.upgrade-btn').forEach(b=>{
-          let uid=b.dataset.upgrade;
-          if(uid==='pea_damage') b.innerHTML = `🌱${t('upgrade_damage')} (100🪙) [${plantUpgrades.pea_damage}]`;
-          if(uid==='pea_speed') b.innerHTML = `🌱${t('upgrade_speed')} (80🪙) [${plantUpgrades.pea_speed}]`;
-          if(uid==='sun_value') b.innerHTML = `🌻${t('upgrade_sun')} (120🪙) [${plantUpgrades.sun_value}]`;
-          if(uid==='nut_hp') b.innerHTML = `🥜${t('upgrade_hp')} (90🪙) [${plantUpgrades.nut_hp}]`;
-        });
-      };
-      upgradePanel.querySelectorAll('.upgrade-btn').forEach(btn=>{
-        btn.onclick=()=>{
-          let id=btn.dataset.upgrade, cost={pea_damage:100, pea_speed:80, sun_value:120, nut_hp:90}[id];
-          if(applyUpgrade(id,cost)){ alert("✅ 升级成功！"); renderMenuUpgradePanel(); updateCurrencyDisplay(); }
-          else alert("❌ 游戏币不足！");
-        };
-      });
+      document.querySelectorAll("#plantButtons .btn[data-plant]").forEach(btn => { btn.onclick = ()=>{ document.querySelectorAll("#plantButtons .btn[data-plant]").forEach(b=>b.classList.remove("sel")); btn.classList.add("sel"); selectedPlant=btn.dataset.plant; }; });
+      document.getElementById('showUpgradeBtn').onclick = ()=>{ upgradePanel.style.display = upgradePanel.style.display==="none" ? "flex" : "none"; upgradePanel.querySelectorAll('.upgrade-btn').forEach(b=>{ let uid=b.dataset.upgrade; if(uid==='pea_damage') b.innerHTML = `🌱${t('upgrade_damage')} (100🪙) [${plantUpgrades.pea_damage}]`; if(uid==='pea_speed') b.innerHTML = `🌱${t('upgrade_speed')} (80🪙) [${plantUpgrades.pea_speed}]`; if(uid==='sun_value') b.innerHTML = `🌻${t('upgrade_sun')} (120🪙) [${plantUpgrades.sun_value}]`; if(uid==='nut_hp') b.innerHTML = `🥜${t('upgrade_hp')} (90🪙) [${plantUpgrades.nut_hp}]`; }); };
+      upgradePanel.querySelectorAll('.upgrade-btn').forEach(btn=>{ btn.onclick=()=>{ let id=btn.dataset.upgrade, cost={pea_damage:100, pea_speed:80, sun_value:120, nut_hp:90}[id]; if(applyUpgrade(id,cost)){ alert("✅ 升级成功！"); renderMenuUpgradePanel(); updateCurrencyDisplay(); } else alert("❌ 游戏币不足！"); }; });
       document.getElementById('backToMenuFromGame').onclick = ()=>{ if(gameState==="PLAYING"){ convertSunToCurrency(sun); sun=150; } showMenu(); };
-      document.getElementById('manualExportBtn').onclick = ()=>{
-        if(!currentGameUser) return;
-        let blob = new Blob([JSON.stringify({ user: currentGameUser, level: currentLevel, wave, sun, currency: globalCurrency, upgrades: plantUpgrades, completedLevels, log: gameLog.slice(-80) }, null, 2)], { type: "application/json" });
-        let a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `CDBR_${currentGameUser}_存档.json`; a.click();
-      };
+      document.getElementById('manualExportBtn').onclick = ()=>{ if(!currentGameUser) return; let blob = new Blob([JSON.stringify({ user: currentGameUser, level: currentLevel, wave, sun, currency: globalCurrency, upgrades: plantUpgrades, completedLevels, log: gameLog.slice(-80) }, null, 2)], { type: "application/json" }); let a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `CDBR_${currentGameUser}_存档.json`; a.click(); };
       gameCanvas.addEventListener("click", (e)=>{
-        if(gameState!=="PLAYING") return;
-        let rect=gameCanvas.getBoundingClientRect(), scaleX=gameCanvas.width/rect.width, scaleY=gameCanvas.height/rect.height;
-        let cx=(e.clientX-rect.left)*scaleX, cy=(e.clientY-rect.top)*scaleY;
-        let col=Math.floor(cx/CELL_W), row=Math.floor(cy/CELL_H);
-        if(row>=ROWS||col>=COLS) return;
+        if(gameState!=="PLAYING") return; let rect=gameCanvas.getBoundingClientRect(), scaleX=gameCanvas.width/rect.width, scaleY=gameCanvas.height/rect.height; let cx=(e.clientX-rect.left)*scaleX, cy=(e.clientY-rect.top)*scaleY; let col=Math.floor(cx/CELL_W), row=Math.floor(cy/CELL_H); if(row>=ROWS||col>=COLS) return;
         for(let i=0;i<sunDrops.length;i++) if(Math.hypot(sunDrops[i].x-cx, sunDrops[i].y-cy)<CELL_H*0.35){ sun+=25; sunDrops.splice(i,1); sunAmountEl.innerText=Math.floor(sun); return; }
-        if(selectedPlant==="Pot" && !grid[row][col] && terrain[row][col]!=='rock'){
-          if(sun>=PLANT_COST.Pot){ sun-=PLANT_COST.Pot; grid[row][col]={type:"Pot", hp:PLANT_HP.Pot, maxHp:PLANT_HP.Pot, plant:null, fireResistTime:0}; sunAmountEl.innerText=Math.floor(sun); }
-        } else if(PLANT_COST[selectedPlant]){
-          let canPlace = (grid[row][col] && grid[row][col].type==="Pot" && !grid[row][col].plant) || (!grid[row][col] && terrain[row][col]!=='rock' && terrain[row][col]!=='lava');
-          if(canPlace && sun>=PLANT_COST[selectedPlant]){
-            sun-=PLANT_COST[selectedPlant];
-            let hpVal=PLANT_HP[selectedPlant]; if(selectedPlant==="Nut") hpVal=6+plantUpgrades.nut_hp; if(selectedPlant==="TallNut") hpVal=12+plantUpgrades.nut_hp;
-            let newPlant={type:selectedPlant, hp:hpVal, maxHp:hpVal, cd:0, sunTimer:(selectedPlant==="Sun"?20:0), ready:undefined, fuse:undefined};
-            if(grid[row][col]&&grid[row][col].type==="Pot") grid[row][col].plant=newPlant; else grid[row][col]=newPlant;
-            sunAmountEl.innerText=Math.floor(sun);
-          }
-        }
+        if(selectedPlant==="Pot" && !grid[row][col] && terrain[row][col]!=='rock'){ if(sun>=PLANT_COST.Pot){ sun-=PLANT_COST.Pot; grid[row][col]={type:"Pot", hp:PLANT_HP.Pot, maxHp:PLANT_HP.Pot, plant:null, fireResistTime:0}; sunAmountEl.innerText=Math.floor(sun); } }
+        else if(PLANT_COST[selectedPlant]){ let canPlace = (grid[row][col] && grid[row][col].type==="Pot" && !grid[row][col].plant) || (!grid[row][col] && terrain[row][col]!=='rock' && terrain[row][col]!=='lava'); if(canPlace && sun>=PLANT_COST[selectedPlant]){ sun-=PLANT_COST[selectedPlant]; let hpVal=PLANT_HP[selectedPlant]; if(selectedPlant==="Nut") hpVal=6+plantUpgrades.nut_hp; if(selectedPlant==="TallNut") hpVal=12+plantUpgrades.nut_hp; let newPlant={type:selectedPlant, hp:hpVal, maxHp:hpVal, cd:0, sunTimer:(selectedPlant==="Sun"?20:0), ready:undefined, fuse:undefined}; if(grid[row][col]&&grid[row][col].type==="Pot") grid[row][col].plant=newPlant; else grid[row][col]=newPlant; sunAmountEl.innerText=Math.floor(sun); } }
       });
       document.getElementById('startGameBtn').onclick = ()=>{ levelsContainer.style.display="flex"; renderLevelList(); };
       document.getElementById('openStockBtn').onclick = ()=>{ menuScreen.style.display="none"; stockModule.style.display="block"; initStockModule(); };
@@ -1191,12 +903,8 @@
 
     function login(username){
       if(!username.trim()){ loginErrorEl.innerText = currentLang==='zh' ? "用户名不能为空" : "Username cannot be empty"; return false; }
-      currentGameUser=username.trim();
-      loadGameLocal(); loadCurrencyAndUpgrades(); updateCurrencyDisplay();
-      loginScreen.style.display="none"; menuScreen.style.display="block";
-      bindAllEvents(); renderMenuUpgradePanel(); menuUpgradePanel.style.display="none"; updateCurrencyDisplay();
-      applyLanguage(currentLang);
-      return true;
+      currentGameUser=username.trim(); loadGameLocal(); loadCurrencyAndUpgrades(); updateCurrencyDisplay();
+      loginScreen.style.display="none"; menuScreen.style.display="block"; bindAllEvents(); renderMenuUpgradePanel(); menuUpgradePanel.style.display="none"; updateCurrencyDisplay(); applyLanguage(currentLang); return true;
     }
 
     document.getElementById('loginBtn').onclick = ()=> login(document.getElementById('username').value);
