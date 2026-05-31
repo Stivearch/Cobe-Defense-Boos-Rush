@@ -186,6 +186,17 @@
       border-radius: 20px;
       line-height: 1.4;
     }
+    .stock-disclaimer {
+      font-size: 7px;
+      color: #ffaa44;
+      background: rgba(255,100,0,0.15);
+      border: 1px solid #ff8844;
+      padding: 8px;
+      border-radius: 12px;
+      margin-top: 10px;
+      line-height: 1.5;
+      text-align: center;
+    }
     #stockModule {
       background: var(--stock-bg);
       border-radius: 20px;
@@ -231,7 +242,7 @@
   <div id="loginScreen" style="display:block;">
     <div class="login">
       <h1 style="font-size:17px;">🧊 Cube Defense: Boss Rush</h1>
-      <p style="margin:18px 0 10px;font-size:9px;">600关·12种地形·真实A股·后台运行</p>
+      <p style="margin:18px 0 10px;font-size:9px;">600关·12种地形·模拟股市·后台运行</p>
       <input type="text" id="username" class="login-input" placeholder="用户名">
       <input type="password" id="password" class="login-input" placeholder="8位数字密码" maxlength="8">
       <button id="loginBtn" class="btn" style="font-size:11px;padding:10px 20px;">🔐 登录 / 注册</button>
@@ -246,7 +257,7 @@
       <h1 style="font-size:17px;">🎮 主菜单 · 600关挑战</h1>
       <div style="display:flex;gap:14px;justify-content:center;margin:22px 0;flex-wrap:wrap;">
         <button id="startGameBtn" class="btn menu-btn" style="font-size:10px;">🧟 选择关卡</button>
-        <button id="openStockBtn" class="btn menu-btn" style="font-size:10px;">📈 A股市场</button>
+        <button id="openStockBtn" class="btn menu-btn" style="font-size:10px;">📈 模拟股市</button>
         <button id="menuUpgradeBtn" class="btn menu-btn" style="font-size:10px;">⬆️ 植物升级</button>
       </div>
       <div id="levelsContainer" class="levels-grid" style="display:none;"></div>
@@ -285,7 +296,7 @@
     <button id="backToMenuFromGame" class="btn" style="margin-top:8px;">🏠 返回主菜单</button>
   </div>
 
-  <!-- A股市场模块 -->
+  <!-- 模拟股市模块 -->
   <div id="stockModule" style="display:none;"></div>
 </div>
 
@@ -321,9 +332,8 @@
     const TOTAL_LEVELS = 600;
     const WIN_WAVE = 50;
     const COLS = 8;
-    const FIXED_STEP = 33; // 逻辑固定步长(ms)，33ms ≈ 30FPS逻辑
+    const FIXED_STEP = 33;
 
-    // DOM缓存
     const $ = (id) => document.getElementById(id);
     const loginScreen = $('loginScreen');
     const menuScreen = $('menuScreen');
@@ -343,23 +353,31 @@
     // ======================= 持久化 =======================
     function saveCurrencyAndUpgrades() {
       if(!currentGameUser) return;
-      localStorage.setItem(`cdbr_currency_${currentGameUser}`, JSON.stringify({ currency: globalCurrency, upgrades: plantUpgrades }));
+      try {
+        localStorage.setItem(`cdbr_currency_${currentGameUser}`, JSON.stringify({ currency: globalCurrency, upgrades: plantUpgrades }));
+      } catch(e) { console.warn("存储失败:", e); }
     }
     function loadCurrencyAndUpgrades() {
       if(!currentGameUser) return;
-      let raw = localStorage.getItem(`cdbr_currency_${currentGameUser}`);
-      if(raw) { let data = JSON.parse(raw); globalCurrency = data.currency || 0; plantUpgrades = data.upgrades || { pea_damage:0, pea_speed:0, sun_value:0, nut_hp:0 }; }
-      else { globalCurrency = 0; plantUpgrades = { pea_damage:0, pea_speed:0, sun_value:0, nut_hp:0 }; }
+      try {
+        let raw = localStorage.getItem(`cdbr_currency_${currentGameUser}`);
+        if(raw) { let data = JSON.parse(raw); globalCurrency = data.currency || 0; plantUpgrades = data.upgrades || { pea_damage:0, pea_speed:0, sun_value:0, nut_hp:0 }; }
+        else { globalCurrency = 0; plantUpgrades = { pea_damage:0, pea_speed:0, sun_value:0, nut_hp:0 }; }
+      } catch(e) { console.warn("读取存储失败:", e); }
       updateCurrencyDisplay();
     }
     function saveGameLocal() {
       if(!currentGameUser) return;
-      localStorage.setItem(`cdbr_save_${currentGameUser}`, JSON.stringify({ wave, sun, currentLevel, completedLevels, bossesDefeatedInLevel }));
+      try {
+        localStorage.setItem(`cdbr_save_${currentGameUser}`, JSON.stringify({ wave, sun, currentLevel, completedLevels, bossesDefeatedInLevel }));
+      } catch(e) {}
     }
     function loadGameLocal() {
       if(!currentGameUser) return;
-      let raw = localStorage.getItem(`cdbr_save_${currentGameUser}`);
-      if(raw) { let s = JSON.parse(raw); wave = s.wave||1; sun = s.sun||150; currentLevel = s.currentLevel||1; completedLevels = s.completedLevels||0; bossesDefeatedInLevel = s.bossesDefeatedInLevel||0; }
+      try {
+        let raw = localStorage.getItem(`cdbr_save_${currentGameUser}`);
+        if(raw) { let s = JSON.parse(raw); wave = s.wave||1; sun = s.sun||150; currentLevel = s.currentLevel||1; completedLevels = s.completedLevels||0; bossesDefeatedInLevel = s.bossesDefeatedInLevel||0; }
+      } catch(e) {}
     }
     function updateCurrencyDisplay() {
       if(currencyAmountEl) currencyAmountEl.innerText = Math.floor(globalCurrency);
@@ -387,7 +405,7 @@
       let a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `CDBR_${currentGameUser}_存档.json`; a.click();
     }
 
-    // ======================= 地形主题（新顺序） =======================
+    // ======================= 地形主题 =======================
     function getRowsForLevel(level) { return Math.min(45, 9 + Math.floor((level-1)*36/599)); }
 
     const THEMES = [
@@ -454,7 +472,7 @@
     const PLANT_HP = { Pea:3, Snow:3, Sun:3, Nut:6, Pot:5, Potato:1, Cherry:1, TallNut:12 };
     const ZOMBIE_TYPES = { Normal:{hp:3,speed:1.6,color:"#c0a080"}, Creeper:{hp:4,speed:1.5,color:"#2d7d2d"}, Enderman:{hp:3,speed:2.4,color:"#1a1a1a"}, Digger:{hp:3,speed:1.7,color:"#996633"}, Giant:{hp:8,speed:1.0,color:"#6b4c3c"} };
 
-    // ======================= 游戏核心（后台运行优化） =======================
+    // ======================= 游戏核心 =======================
     function startLevel(level) {
       if(level > TOTAL_LEVELS) { alert("🏆 恭喜！你已完成全部600关！游戏通关！🏆"); showMenu(); return; }
       if(updateInterval) clearInterval(updateInterval);
@@ -477,33 +495,27 @@
       let now = performance.now();
       lastWaveTime = now; lastZombieSpawnTime = now; lastGameUpdate = now;
 
-      // 渲染循环 (与逻辑分离)
       function renderLoop() {
         if(gameState==="PLAYING") draw();
         animFrameId = requestAnimationFrame(renderLoop);
       }
       renderLoop();
 
-      // 逻辑更新循环 (基于真实时间追赶)
       updateInterval = setInterval(() => {
         if (gameState !== "PLAYING") return;
         const nowTime = performance.now();
         let delta = nowTime - lastGameUpdate;
-        // 防止长时间后台造成巨大累积（最多追2秒）
         if (delta > 2000) delta = 2000;
         logicAccumulator += delta;
         lastGameUpdate = nowTime;
 
-        // 固定步长追赶，保持逻辑稳定性
         while (logicAccumulator >= FIXED_STEP) {
-          // 波次推进：每10秒自动增加一波
           if (nowTime - lastWaveTime >= 10000) {
             wave++;
-            lastWaveTime += 10000; // 累加而非重置为nowTime，避免累积误差
+            lastWaveTime += 10000;
             if (wave > WIN_WAVE) wave = WIN_WAVE;
           }
 
-          // 僵尸生成控制
           let spawnInterval = Math.max(350, 1500 - Math.floor(currentLevel*1.1) - Math.floor(wave/4));
           if (nowTime - lastZombieSpawnTime >= spawnInterval && zombies.filter(z=>!z.isBoss).length < 16 && !zombies.some(z=>z.isBoss)) {
             let types = ["Normal","Creeper","Enderman","Digger"]; if(wave>=15) types.push("Giant");
@@ -521,7 +533,6 @@
             lastZombieSpawnTime = nowTime;
           }
 
-          // BOSS波次检测
           let bossWaveMap = [10,20,30,40,50];
           if(bossesDefeatedInLevel<5 && wave>=bossWaveMap[bossesDefeatedInLevel] && !zombies.some(z=>z.isBoss)) {
             let enhancedBosses = getEnhancedBosses(currentLevel);
@@ -537,12 +548,10 @@
             addLog(`👾 BOSS登场: ${bossData.name} (HP:${bossData.hp})`);
           }
 
-          // 胜利检测
           if(wave>=WIN_WAVE && zombies.length===0 && bossesDefeatedInLevel>=5) {
             gameOver(true); return;
           }
 
-          // 更新游戏逻辑 (固定步长因子1.0)
           updateGameLogic(1.0);
           logicAccumulator -= FIXED_STEP;
         }
@@ -553,7 +562,6 @@
     function updateGameLogic(timeFactor=1.0) {
       if(gameState!=="PLAYING") return;
 
-      // 植物行为
       for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++){
         let p=grid[r][c]; if(!p) continue;
         if(terrain[r][c]==='lava'){
@@ -599,29 +607,30 @@
         if(actual.fuse!==undefined && actual.fuse>0) actual.fuse-=timeFactor;
       }
 
-      // 子弹移动
       bullets.forEach(b => b.x += (b.type==="ice"?9:12)*timeFactor);
       bullets = bullets.filter(b => b.x < COLS*CELL_W+60);
 
-      // 子弹碰撞
-      for(let i=0;i<bullets.length;i++) for(let j=0;j<zombies.length;j++){
-        let z=zombies[j];
-        if(z.row===bullets[i].row && bullets[i].x+10>z.x && bullets[i].x<z.x+CELL_W){
-          z.hp-=bullets[i].damage;
-          if(bullets[i].type==="ice") z.slowTimer=75;
-          if(z.hp<=0){
-            if(z.isBoss){
-              sun+=z.reward; bossesDefeatedInLevel++;
-              sunAmountEl.innerText=Math.floor(sun);
-              addLog(`💀 击败BOSS: ${z.name} +${z.reward}☀️`);
+      for(let i=0;i<bullets.length;i++) {
+        let hit = false;
+        for(let j=0;j<zombies.length;j++){
+          let z=zombies[j];
+          if(z.row===bullets[i].row && bullets[i].x+10>z.x && bullets[i].x<z.x+CELL_W){
+            z.hp-=bullets[i].damage;
+            if(bullets[i].type==="ice") z.slowTimer=75;
+            if(z.hp<=0){
+              if(z.isBoss){
+                sun+=z.reward; bossesDefeatedInLevel++;
+                sunAmountEl.innerText=Math.floor(sun);
+                addLog(`💀 击败BOSS: ${z.name} +${z.reward}☀️`);
+              }
+              zombies.splice(j,1);
             }
-            zombies.splice(j,1);
+            bullets.splice(i,1); i--; hit = true; break;
           }
-          bullets.splice(i,1); i--; break;
         }
+        if(hit) continue;
       }
 
-      // 僵尸移动与攻击
       for(let i=0;i<zombies.length;i++){
         let z=zombies[i];
         let effSpeed = z.speed;
@@ -638,6 +647,7 @@
           let mul=(tile==='water')?0.55:(tile==='ice')?0.65:(tile==='mud'||tile==='mountain')?0.75:1;
           if(tile!=='rock') z.x -= moveDist * mul;
           if(tile==='lava') z.hp -= 0.03*timeFactor;
+          if(z.hp <= 0) { zombies.splice(i,1); i--; continue; }
         } else z.x -= moveDist;
 
         let attackCol = Math.floor(z.x/CELL_W);
@@ -670,7 +680,6 @@
       ctx.clearRect(0,0,gameCanvas.width,gameCanvas.height);
       let theme = getThemeForLevel(currentLevel);
 
-      // 绘制地形
       for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++){
         let type=terrain[r][c], x=c*CELL_W, y=r*CELL_H;
         if(type==='grass'){ ctx.fillStyle=theme.mainGrass; ctx.fillRect(x,y,CELL_W,CELL_H); ctx.fillStyle=theme.altColor2; for(let i=0;i<25;i++) ctx.fillRect(x+(i*13%CELL_W), y+(i*7%CELL_H),3,3); }
@@ -682,7 +691,6 @@
         else if(type==='mountain'){ ctx.fillStyle="#6a6a5a"; ctx.fillRect(x,y,CELL_W,CELL_H); ctx.fillStyle="#8a8a7a"; for(let i=0;i<30;i++){ let px=x+(i*11%CELL_W), py=y+(i*13%CELL_H); ctx.fillRect(px,py,5,5); } ctx.fillStyle="#4a4a3a"; for(let i=0;i<15;i++){ ctx.fillRect(x+10+(i*37%CELL_W), y+5+(i*29%CELL_H),7,7); } }
       }
 
-      // 绘制植物
       for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++){
         let cell=grid[r][c]; if(!cell) continue;
         let x=c*CELL_W, y=r*CELL_H;
@@ -700,13 +708,9 @@
         else if(p.type==="TallNut"){ ctx.fillStyle="#c49a6c"; ctx.fillRect(x+28,y+16,44,84); ctx.fillStyle="#ddb88a"; ctx.fillRect(x+32,y+20,36,76); }
       }
 
-      // 阳光掉落
       sunDrops.forEach(d=>{ ctx.fillStyle="#ffdd44"; ctx.beginPath(); ctx.arc(d.x,d.y,Math.max(6,CELL_H*0.1),0,Math.PI*2); ctx.fill(); });
-
-      // 子弹
       bullets.forEach(b=>{ ctx.fillStyle=b.type==="ice"?"#88ddff":"#4caf50"; ctx.beginPath(); ctx.arc(b.x,b.y,Math.max(5,CELL_H*0.055),0,Math.PI*2); ctx.fill(); });
 
-      // 僵尸
       zombies.forEach(z=>{
         ctx.save(); let shakeOffset = (screenShake[z.row]||0)*(Math.random()-0.5)*2;
         ctx.translate(z.x+CELL_W*0.5, z.row*CELL_H+CELL_H/2+Math.sin(Date.now()*0.005+z.walkPhase)*3+shakeOffset);
@@ -719,18 +723,15 @@
         ctx.restore();
       });
 
-      // 界面文字
       ctx.font=`${Math.max(10,CELL_H*0.1)}px 'Press Start 2P'`; ctx.fillStyle="#fff3c9";
       ctx.fillText(`关卡 ${currentLevel}/${TOTAL_LEVELS} · ${getThemeForLevel(currentLevel).name} · 波次 ${wave}/${WIN_WAVE}  BOSS:${bossesDefeatedInLevel}/5 · 行:${ROWS}`, 15, Math.min(32,CELL_H*0.3));
-
-      // 昼夜叠加
       ctx.fillStyle = getDaylightTint(currentLevel); ctx.fillRect(0,0,gameCanvas.width,gameCanvas.height);
     }
 
     function gameOver(win){
       if(gameState!=="PLAYING") return;
       gameState="END";
-      if(updateInterval) clearInterval(updateInterval);
+      if(updateInterval) { clearInterval(updateInterval); updateInterval = null; }
       let coinGain = convertSunToCurrency(sun);
       if(win){
         if(wave>=WIN_WAVE && bossesDefeatedInLevel>=5){
@@ -743,13 +744,14 @@
     }
 
     function showMenu(){
-      if(updateInterval) clearInterval(updateInterval);
-      if(animFrameId) cancelAnimationFrame(animFrameId);
+      if(updateInterval) { clearInterval(updateInterval); updateInterval = null; }
+      if(animFrameId) { cancelAnimationFrame(animFrameId); animFrameId = null; }
       gameState="MENU"; gameScreen.style.display="none"; stockModule.style.display="none"; menuScreen.style.display="block";
       updateCurrencyDisplay(); renderMenuUpgradePanel(); saveGameLocal();
     }
 
     function renderLevelList(){
+      if(!levelsContainer) return;
       levelsContainer.innerHTML="";
       for(let i=1;i<=Math.min(completedLevels+1, TOTAL_LEVELS);i++){
         let theme=getThemeForLevel(i), rows=getRowsForLevel(i);
@@ -780,7 +782,7 @@
       });
     }
 
-    // ======================= A股模拟股市（真实股票） =======================
+    // ======================= 模拟股市（含免责声明） =======================
     const REAL_STOCKS = [
       { symbol:"600519", name:"贵州茅台", basePrice:1850, volatility:0.018 },
       { symbol:"000858", name:"五粮液", basePrice:162, volatility:0.022 },
@@ -865,7 +867,7 @@
       let totalAsset=getTotalAssetValue();
       let html = `
       <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px;">
-        <h2 style="font-size:13px;color:#ffcc44;">📈 A股市场 · 实时模拟</h2>
+        <h2 style="font-size:13px;color:#ffcc44;">📈 模拟股市 · 仅供娱乐</h2>
         <button class="btn" id="backToMenuFromStock" style="font-size:8px;">🏠 返回菜单</button>
       </div>
       <div class="asset-summary">
@@ -874,9 +876,13 @@
         <div>🏦 总资产: <b>${Math.floor(totalAsset)}</b> 🪙</div>
         <div style="color:${marginAccount.debt>0?'#ff6666':'#88cc88'}">💳 融资债务: <b>${marginAccount.debt.toFixed(1)}</b> 🪙</div>
       </div>
-      <div class="stock-grid">
+      <div class="stock-disclaimer">
+        ⚠️ 免责声明：本股市模块为纯模拟娱乐功能，所有股票价格均为随机生成，<br>
+        与真实市场行情无关。不构成任何投资建议，请勿用于实际投资决策。
+      </div>
+      <div class="stock-grid" style="margin-top:10px;">
         <div class="stock-card">
-          <h3>📋 真实A股 (点击选中)</h3>
+          <h3>📋 模拟A股 (点击选中)</h3>
           <table class="stock-table"><thead><tr><th>代码/名称</th><th>价格</th><th>涨跌</th><th>持仓</th></tr></thead><tbody id="stockTableBody"></tbody></table>
           <div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
             <span style="font-size:8px;">选中: <b id="selectedStockLabel">${selectedStockSymbol||'-'}</b></span>
@@ -884,7 +890,6 @@
             <button class="btn btn-buy" id="btnBuy">买入</button>
             <button class="btn btn-sell" id="btnSell">卖出</button>
           </div>
-          <div style="font-size:7px;color:#aaa;margin-top:4px;">A股涨跌停±10% · T+0模拟</div>
         </div>
         <div class="stock-card">
           <h3>📦 持仓列表</h3>
@@ -896,7 +901,7 @@
             <button class="btn btn-margin" id="btnBorrow">借入</button>
             <button class="btn btn-repay" id="btnRepay">偿还</button>
           </div>
-          <div style="font-size:7px;margin-top:6px;color:#aac;">⚠️ 融资利率: ${(marginAccount.interestRate*100).toFixed(2)}%/周期</div>
+          <div style="font-size:7px;margin-top:6px;color:#aac;">利率: ${(marginAccount.interestRate*100).toFixed(2)}%/周期</div>
         </div>
       </div>
       <div class="chart-container">
@@ -1074,7 +1079,7 @@
     document.getElementById('password').addEventListener('keydown', e=>{ if(e.key==='Enter') login(document.getElementById('username').value, document.getElementById('password').value); });
     document.getElementById('username').addEventListener('keydown', e=>{ if(e.key==='Enter') document.getElementById('password').focus(); });
     updateCurrencyDisplay();
-    console.log("🧊 Cube Defense: Boss Rush · 每关约8分钟 · 后台运行不暂停 · 真实A股已就绪");
+    console.log("🧊 Cube Defense: Boss Rush · 模拟股市免责声明已添加 · BUG已修复");
   })();
 </script>
 </body>
