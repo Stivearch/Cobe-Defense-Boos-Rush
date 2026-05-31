@@ -1,0 +1,1081 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
+  <title>⚡ Cube Defense: Boss Rush · 600关·真实股市·后台运行</title>
+  <style>
+    :root {
+      --bg: #0a2a1a;
+      --panel: #4a2c14;
+      --btn: #b87c4a;
+      --btn-shadow: #4e2a10;
+      --gold: #f5b642;
+      --coin: #ffaa33;
+      --text: #ffdd77;
+      --stock-bg: #1a1a2e;
+      --stock-card: #16213e;
+      --stock-red: #ff4757;
+      --stock-green: #00d2d3;
+      --stock-text: #e6f1ff;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
+    body {
+      background: #0a2a1a;
+      font-family: 'Press Start 2P', 'Segoe UI', monospace;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 12px;
+      overflow-x: hidden;
+      background-image: radial-gradient(ellipse at center, #1a4a2a 0%, #0a1a0a 100%);
+    }
+    #app {
+      width: 100%;
+      max-width: 1400px;
+      background: #5c3e1f;
+      border-radius: 28px;
+      padding: 12px;
+      box-shadow: 0 12px 0 #2d1e0e, 0 16px 32px rgba(0,0,0,0.5);
+      margin: auto;
+    }
+    .canvas-wrapper {
+      overflow: auto;
+      border-radius: 20px;
+      background: #1a1a1a;
+      max-height: 62vh;
+      border: 3px solid #b87c4a;
+      -webkit-overflow-scrolling: touch;
+      box-shadow: inset 0 0 30px rgba(0,0,0,0.6);
+    }
+    canvas {
+      display: block;
+      margin: 0 auto;
+      image-rendering: crisp-edges;
+      image-rendering: pixelated;
+      background: #000;
+      cursor: crosshair;
+      width: auto;
+      height: auto;
+      max-width: 100%;
+    }
+    .panel {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      background: #4a2c14;
+      padding: 10px 12px;
+      border-radius: 24px;
+      margin-bottom: 10px;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 4px 0 #2d1e0e;
+    }
+    .sun, .coin {
+      background: #f5b642;
+      color: #3c280a;
+      padding: 6px 14px;
+      border-radius: 40px;
+      font-weight: bold;
+      font-size: 13px;
+      display: inline-flex;
+      gap: 8px;
+      align-items: center;
+      white-space: nowrap;
+      box-shadow: inset 0 -3px 0 #b87c2a;
+      letter-spacing: 1px;
+    }
+    .coin { background: #ffaa33; box-shadow: inset 0 -3px 0 #cc8822; }
+    .btn {
+      background: #b87c4a;
+      border: none;
+      color: #f9e2a1;
+      padding: 8px 14px;
+      border-radius: 40px;
+      font-family: 'Press Start 2P', monospace;
+      font-size: 9px;
+      cursor: pointer;
+      box-shadow: 0 4px 0 #4e2a10;
+      transition: 0.05s linear;
+      white-space: nowrap;
+      letter-spacing: 0.5px;
+      text-shadow: 0 1px 1px rgba(0,0,0,0.4);
+    }
+    .btn:hover { background: #d88e4a; transform: translateY(-1px); box-shadow: 0 5px 0 #4e2a10; }
+    .btn:active { transform: translateY(3px); box-shadow: 0 1px 0 #4e2a10; background: #9a5e30; }
+    .btn.sel { outline: 3px solid #ffff66; background: #d88e4a; animation: pulse 0.8s infinite alternate; }
+    @keyframes pulse { from { outline-color: #ffff66; } to { outline-color: #ffaa00; } }
+    .btn-group { display: flex; flex-wrap: wrap; gap: 5px; }
+    .upgrade-panel {
+      background: #2c1a0c;
+      border-radius: 20px;
+      padding: 10px;
+      margin-top: 8px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      justify-content: center;
+      border: 2px solid #5a3a1a;
+    }
+    .upgrade-btn { background: #4a6c8c; font-size: 8px; padding: 5px 10px; box-shadow: 0 3px 0 #2a4a6a; }
+    .upgrade-btn:hover { background: #5a8cac; }
+    .login, .menu { text-align: center; color: #ffdd77; padding: 30px 20px; }
+    .login h1, .menu h1 { text-shadow: 0 3px 0 #3a1a0a; margin-bottom: 10px; }
+    .login-input {
+      background: #2c1a0c;
+      border: 3px solid #b87c4a;
+      border-radius: 40px;
+      padding: 12px 16px;
+      margin: 10px auto;
+      width: 280px;
+      font-family: 'Press Start 2P', monospace;
+      font-size: 11px;
+      color: #ffdd77;
+      text-align: center;
+      display: block;
+      outline: none;
+    }
+    .login-input:focus { border-color: #ffcc44; box-shadow: 0 0 16px rgba(255,200,60,0.4); }
+    .error-msg { color: #ff6666; font-size: 10px; margin-top: 8px; min-height: 18px; }
+    .level-card {
+      background: #4a2c14;
+      border-radius: 22px;
+      padding: 14px 8px;
+      width: 115px;
+      text-align: center;
+      cursor: pointer;
+      margin: 6px;
+      display: inline-block;
+      border: 2px solid #6a4a2a;
+      transition: 0.1s;
+      color: #ffdd77;
+      box-shadow: 0 3px 0 #2d1e0e;
+    }
+    .level-card:hover { background: #6a4a2a; transform: translateY(-2px); box-shadow: 0 5px 0 #2d1e0e; border-color: #ffcc44; }
+    .level-card.locked { opacity: 0.45; filter: grayscale(0.7); cursor: not-allowed; pointer-events: none; }
+    .levels-grid {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      margin: 15px 0;
+      max-height: 420px;
+      overflow-y: auto;
+      padding: 10px;
+      background: rgba(0,0,0,0.25);
+      border-radius: 20px;
+    }
+    .tip {
+      font-size: 8px;
+      text-align: center;
+      margin-top: 10px;
+      color: #eedd99;
+      background: rgba(42,26,12,0.7);
+      padding: 8px;
+      border-radius: 30px;
+      letter-spacing: 0.3px;
+    }
+    .disclaimer {
+      font-size: 7px;
+      text-align: center;
+      margin-top: 14px;
+      color: #ccccaa;
+      background: rgba(0,0,0,0.45);
+      padding: 8px;
+      border-radius: 20px;
+      line-height: 1.4;
+    }
+    #stockModule {
+      background: var(--stock-bg);
+      border-radius: 20px;
+      padding: 15px;
+      color: var(--stock-text);
+      font-family: 'Segoe UI', 'Press Start 2P', monospace;
+      max-height: 70vh;
+      overflow-y: auto;
+      border: 2px solid #233554;
+    }
+    .stock-grid { display: grid; grid-template-columns: 1fr; gap: 15px; margin-top: 12px; }
+    @media (min-width: 900px) { .stock-grid { grid-template-columns: 1.5fr 1fr; } }
+    .stock-card { background: var(--stock-card); border-radius: 12px; padding: 12px; border: 1px solid #233554; }
+    .stock-card h3 { font-size: 10px; margin-bottom: 8px; color: #ffcc66; letter-spacing: 0.5px; }
+    .stock-table { width: 100%; border-collapse: collapse; font-size: 9px; }
+    .stock-table th, .stock-table td { padding: 7px 5px; text-align: right; border-bottom: 1px solid #233554; cursor: pointer; }
+    .stock-table td:first-child { text-align: left; font-weight: bold; }
+    .stock-table tr:hover td { background: rgba(255,255,255,0.05); }
+    .stock-table tr.sel-row td { background: rgba(255,200,60,0.15); outline: 1px solid #ffaa33; }
+    .up { color: var(--stock-red); } .down { color: var(--stock-green); }
+    .trade-input {
+      width: 100%; padding: 8px; margin-top: 6px; background: #0f3460; border: 1px solid #345888;
+      color: white; border-radius: 8px; font-size: 11px; font-family: 'Press Start 2P', monospace; outline: none;
+    }
+    .trade-input:focus { border-color: #ffaa33; }
+    .btn-buy { background: var(--stock-red); box-shadow: 0 3px 0 #aa2a3a; font-size: 8px; padding: 6px 10px; }
+    .btn-sell { background: var(--stock-green); box-shadow: 0 3px 0 #008a8a; font-size: 8px; padding: 6px 10px; color: #0a1a1a; }
+    .btn-margin { background: #ff8844; box-shadow: 0 3px 0 #aa5522; font-size: 8px; padding: 6px 10px; }
+    .btn-repay { background: #44aaff; box-shadow: 0 3px 0 #2266aa; font-size: 8px; padding: 6px 10px; color: #0a1a1a; }
+    .position-item { display: flex; justify-content: space-between; padding: 7px 0; border-bottom: 1px dashed #233554; font-size: 8px; align-items: center; }
+    .asset-summary { display: flex; flex-wrap: wrap; gap: 10px; background: #0f3460; padding: 10px; border-radius: 12px; margin-bottom: 15px; justify-content: space-between; }
+    .asset-summary div { font-size: 9px; letter-spacing: 0.3px; }
+    .chart-container { margin-top: 12px; background: #0a0f1a; border-radius: 8px; padding: 6px; border: 1px solid #233554; }
+    canvas#equityChartCanvas { max-height: 160px; width: 100%; }
+    .menu-btn { font-size: 10px; padding: 10px 18px; }
+  </style>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+<div id="app">
+  <!-- 登录界面 -->
+  <div id="loginScreen" style="display:block;">
+    <div class="login">
+      <h1 style="font-size:17px;">🧊 Cube Defense: Boss Rush</h1>
+      <p style="margin:18px 0 10px;font-size:9px;">600关·12种地形·真实A股·后台运行</p>
+      <input type="text" id="username" class="login-input" placeholder="用户名">
+      <input type="password" id="password" class="login-input" placeholder="8位数字密码" maxlength="8">
+      <button id="loginBtn" class="btn" style="font-size:11px;padding:10px 20px;">🔐 登录 / 注册</button>
+      <div id="loginError" class="error-msg"></div>
+      <div class="disclaimer">⚠️ 地形顺序：平原→山地→火山→沙漠→冰原→沼泽→森林→海洋→废墟→地底→天空→虚空 | 每关50波(约8分钟) | 昼夜渐变 | 后台运行不暂停</div>
+    </div>
+  </div>
+
+  <!-- 主菜单 -->
+  <div id="menuScreen" style="display:none;">
+    <div class="menu">
+      <h1 style="font-size:17px;">🎮 主菜单 · 600关挑战</h1>
+      <div style="display:flex;gap:14px;justify-content:center;margin:22px 0;flex-wrap:wrap;">
+        <button id="startGameBtn" class="btn menu-btn" style="font-size:10px;">🧟 选择关卡</button>
+        <button id="openStockBtn" class="btn menu-btn" style="font-size:10px;">📈 A股市场</button>
+        <button id="menuUpgradeBtn" class="btn menu-btn" style="font-size:10px;">⬆️ 植物升级</button>
+      </div>
+      <div id="levelsContainer" class="levels-grid" style="display:none;"></div>
+      <div id="menuUpgradePanel" class="upgrade-panel" style="display:none;"></div>
+      <div class="tip">💰 每关50波 | 波次间隔10秒 | 总时长约8分钟 | 行数9→45 | 主题每50关变换 | BOSS难度线性增长</div>
+      <div style="margin-top:10px;color:#ffdd77;font-size:9px;">🪙 游戏币: <span id="menuCurrency">0</span> | 🏆 已通关: <span id="menuCompleted">0</span>/600</div>
+    </div>
+  </div>
+
+  <!-- 游戏界面 -->
+  <div id="gameScreen" style="display:none;">
+    <div class="panel">
+      <div class="sun">☀️ <span id="sunAmount">150</span></div>
+      <div class="coin">🪙 <span id="currencyAmount">0</span></div>
+      <div class="btn-group" id="plantButtons">
+        <button class="btn sel" data-plant="Pea" style="font-size:8px;">🌱豌豆</button>
+        <button class="btn" data-plant="Snow" style="font-size:8px;">❄️寒冰</button>
+        <button class="btn" data-plant="Sun" style="font-size:8px;">🌻向日葵</button>
+        <button class="btn" data-plant="Nut" style="font-size:8px;">🥜坚果</button>
+        <button class="btn" data-plant="Pot" style="font-size:8px;">🪴花盆</button>
+        <button class="btn" data-plant="Potato" style="font-size:8px;">🥔土豆雷</button>
+        <button class="btn" data-plant="Cherry" style="font-size:8px;">🍒樱桃</button>
+        <button class="btn" data-plant="TallNut" style="font-size:8px;">🪵高坚果</button>
+      </div>
+      <button id="showUpgradeBtn" class="btn" style="font-size:8px;">⬆️升级</button>
+      <button id="manualExportBtn" class="btn" style="font-size:8px;">📦导出</button>
+    </div>
+    <div id="upgradePanel" class="upgrade-panel" style="display:none;">
+      <button class="btn upgrade-btn" data-upgrade="pea_damage">🌱伤害+1 (100🪙)</button>
+      <button class="btn upgrade-btn" data-upgrade="pea_speed">🌱攻速↑ (80🪙)</button>
+      <button class="btn upgrade-btn" data-upgrade="sun_value">🌻阳光+5 (120🪙)</button>
+      <button class="btn upgrade-btn" data-upgrade="nut_hp">🥜HP+3 (90🪙)</button>
+    </div>
+    <div class="canvas-wrapper"><canvas id="gameCanvas" width="800" height="1080"></canvas></div>
+    <div class="tip" id="gameTip">⚡ 高速战斗 | 点击收集阳光 | 通关解锁下一关 | 后台不掉队</div>
+    <button id="backToMenuFromGame" class="btn" style="margin-top:8px;">🏠 返回主菜单</button>
+  </div>
+
+  <!-- A股市场模块 -->
+  <div id="stockModule" style="display:none;"></div>
+</div>
+
+<script>
+  (function() {
+    // ======================= 全局状态 =======================
+    let globalCurrency = 0;
+    let plantUpgrades = { pea_damage: 0, pea_speed: 0, sun_value: 0, nut_hp: 0 };
+    let currentGameUser = null;
+    let currentLevel = 1;
+    let completedLevels = 0;
+    let gameState = "MENU";
+    let updateInterval = null;
+    let animFrameId = null;
+    let selectedPlant = "Pea";
+    let ROWS = 9;
+    let CELL_W = 100;
+    let CELL_H = 120;
+    let sun = 150;
+    let wave = 1;
+    let bossesDefeatedInLevel = 0;
+    let gameLog = [];
+    let grid = [];
+    let terrain = [];
+    let zombies = [];
+    let bullets = [];
+    let sunDrops = [];
+    let screenShake = [];
+    let lastWaveTime = 0;
+    let lastZombieSpawnTime = 0;
+    let lastGameUpdate = 0;
+    let logicAccumulator = 0;
+    const TOTAL_LEVELS = 600;
+    const WIN_WAVE = 50;
+    const COLS = 8;
+    const FIXED_STEP = 33; // 逻辑固定步长(ms)，33ms ≈ 30FPS逻辑
+
+    // DOM缓存
+    const $ = (id) => document.getElementById(id);
+    const loginScreen = $('loginScreen');
+    const menuScreen = $('menuScreen');
+    const gameScreen = $('gameScreen');
+    const stockModule = $('stockModule');
+    const gameCanvas = $('gameCanvas');
+    const ctx = gameCanvas.getContext('2d');
+    const sunAmountEl = $('sunAmount');
+    const currencyAmountEl = $('currencyAmount');
+    const loginErrorEl = $('loginError');
+    const levelsContainer = $('levelsContainer');
+    const upgradePanel = $('upgradePanel');
+    const menuUpgradePanel = $('menuUpgradePanel');
+    const menuCurrencyEl = $('menuCurrency');
+    const menuCompletedEl = $('menuCompleted');
+
+    // ======================= 持久化 =======================
+    function saveCurrencyAndUpgrades() {
+      if(!currentGameUser) return;
+      localStorage.setItem(`cdbr_currency_${currentGameUser}`, JSON.stringify({ currency: globalCurrency, upgrades: plantUpgrades }));
+    }
+    function loadCurrencyAndUpgrades() {
+      if(!currentGameUser) return;
+      let raw = localStorage.getItem(`cdbr_currency_${currentGameUser}`);
+      if(raw) { let data = JSON.parse(raw); globalCurrency = data.currency || 0; plantUpgrades = data.upgrades || { pea_damage:0, pea_speed:0, sun_value:0, nut_hp:0 }; }
+      else { globalCurrency = 0; plantUpgrades = { pea_damage:0, pea_speed:0, sun_value:0, nut_hp:0 }; }
+      updateCurrencyDisplay();
+    }
+    function saveGameLocal() {
+      if(!currentGameUser) return;
+      localStorage.setItem(`cdbr_save_${currentGameUser}`, JSON.stringify({ wave, sun, currentLevel, completedLevels, bossesDefeatedInLevel }));
+    }
+    function loadGameLocal() {
+      if(!currentGameUser) return;
+      let raw = localStorage.getItem(`cdbr_save_${currentGameUser}`);
+      if(raw) { let s = JSON.parse(raw); wave = s.wave||1; sun = s.sun||150; currentLevel = s.currentLevel||1; completedLevels = s.completedLevels||0; bossesDefeatedInLevel = s.bossesDefeatedInLevel||0; }
+    }
+    function updateCurrencyDisplay() {
+      if(currencyAmountEl) currencyAmountEl.innerText = Math.floor(globalCurrency);
+      if(menuCurrencyEl) menuCurrencyEl.innerText = Math.floor(globalCurrency);
+      if(menuCompletedEl) menuCompletedEl.innerText = completedLevels;
+    }
+    function addCurrency(amount) { globalCurrency += amount; updateCurrencyDisplay(); saveCurrencyAndUpgrades(); }
+    function spendCurrency(amount) { if(globalCurrency >= amount) { globalCurrency -= amount; updateCurrencyDisplay(); saveCurrencyAndUpgrades(); return true; } return false; }
+    function convertSunToCurrency(sunAmt) { let coinGain = Math.floor(sunAmt / 10); if(coinGain > 0) { addCurrency(coinGain); return coinGain; } return 0; }
+    function applyUpgrade(id, cost) {
+      if(spendCurrency(cost)) {
+        if(id==='pea_damage') plantUpgrades.pea_damage++;
+        else if(id==='pea_speed') plantUpgrades.pea_speed++;
+        else if(id==='sun_value') plantUpgrades.sun_value++;
+        else if(id==='nut_hp') plantUpgrades.nut_hp++;
+        saveCurrencyAndUpgrades();
+        return true;
+      }
+      return false;
+    }
+    function addLog(e) { gameLog.push({ time: new Date().toISOString(), event: e, wave, level: currentLevel }); if(gameLog.length>200) gameLog.shift(); }
+    function exportGameArchive() {
+      if(!currentGameUser) return;
+      let blob = new Blob([JSON.stringify({ user: currentGameUser, level: currentLevel, wave, sun, currency: globalCurrency, upgrades: plantUpgrades, completedLevels, log: gameLog.slice(-80) }, null, 2)], { type: "application/json" });
+      let a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `CDBR_${currentGameUser}_存档.json`; a.click();
+    }
+
+    // ======================= 地形主题（新顺序） =======================
+    function getRowsForLevel(level) { return Math.min(45, 9 + Math.floor((level-1)*36/599)); }
+
+    const THEMES = [
+      { name: "平原", mainGrass: "#6b8e23", altColor1: "#8fbc6e", altColor2: "#4a5d23", waterProb:0.08, lavaProb:0, rockProb:0.04, mudProb:0.04, iceProb:0, mountainProb:0 },
+      { name: "山地", mainGrass: "#8b8b7a", altColor1: "#a8a894", altColor2: "#5a5a4a", waterProb:0.02, lavaProb:0, rockProb:0.15, mudProb:0.02, iceProb:0, mountainProb:0.60 },
+      { name: "火山", mainGrass: "#8a3a2a", altColor1: "#aa5a3a", altColor2: "#cc6633", waterProb:0, lavaProb:0.20, rockProb:0.15, mudProb:0.04, iceProb:0, mountainProb:0 },
+      { name: "沙漠", mainGrass: "#e8c96e", altColor1: "#d4a34a", altColor2: "#b87c2a", waterProb:0.02, lavaProb:0.03, rockProb:0.12, mudProb:0.08, iceProb:0, mountainProb:0 },
+      { name: "冰原", mainGrass: "#aad4ff", altColor1: "#7bb3db", altColor2: "#4a8cbc", waterProb:0.03, lavaProb:0, rockProb:0.08, mudProb:0.02, iceProb:0.25, mountainProb:0 },
+      { name: "沼泽", mainGrass: "#6a8a4a", altColor1: "#4a6a2a", altColor2: "#2a4a1a", waterProb:0.15, lavaProb:0, rockProb:0.05, mudProb:0.20, iceProb:0, mountainProb:0 },
+      { name: "森林", mainGrass: "#3c7840", altColor1: "#2a5a2e", altColor2: "#1a3e1e", waterProb:0.08, lavaProb:0, rockProb:0.03, mudProb:0.10, iceProb:0, mountainProb:0 },
+      { name: "海洋", mainGrass: "#2a6a8c", altColor1: "#1a4a6a", altColor2: "#0a2a4a", waterProb:0.30, lavaProb:0, rockProb:0.05, mudProb:0.02, iceProb:0, mountainProb:0 },
+      { name: "废墟", mainGrass: "#7a6a5a", altColor1: "#5a4a3a", altColor2: "#3a2a1a", waterProb:0.02, lavaProb:0.04, rockProb:0.25, mudProb:0.10, iceProb:0, mountainProb:0 },
+      { name: "地底", mainGrass: "#4a3a2a", altColor1: "#6a4a3a", altColor2: "#2a1a0a", waterProb:0.02, lavaProb:0.12, rockProb:0.22, mudProb:0.08, iceProb:0, mountainProb:0 },
+      { name: "天空", mainGrass: "#aaccff", altColor1: "#88aaee", altColor2: "#6688cc", waterProb:0.02, lavaProb:0, rockProb:0.02, mudProb:0.02, iceProb:0.10, mountainProb:0 },
+      { name: "虚空", mainGrass: "#4a3a6a", altColor1: "#6a4a8a", altColor2: "#8a5aaa", waterProb:0.05, lavaProb:0.05, rockProb:0.15, mudProb:0.05, iceProb:0.08, mountainProb:0 }
+    ];
+    function getThemeForLevel(level) {
+      let idx = Math.min(Math.floor((level-1)/50), THEMES.length-1);
+      return THEMES[idx];
+    }
+    function getDaylightTint(level) {
+      let progress = Math.min(1, Math.max(0, (level-1)/TOTAL_LEVELS));
+      let alpha = 0.05 + progress * 0.30;
+      let r,g,b;
+      if(progress < 0.4) { let t = progress/0.4; r = 255 - 40*t; g = 240 - 50*t; b = 200 - 70*t; }
+      else if(progress < 0.7) { let t = (progress-0.4)/0.3; r = 215 - 100*t; g = 190 - 110*t; b = 130 - 80*t; }
+      else { let t = (progress-0.7)/0.3; r = 115 - 85*t; g = 80 - 60*t; b = 50 - 35*t; }
+      r = Math.max(0, Math.floor(r)); g = Math.max(0, Math.floor(g)); b = Math.max(0, Math.floor(b));
+      return `rgba(${r},${g},${b},${alpha.toFixed(3)})`;
+    }
+
+    function generateComplexTerrain(level, rows) {
+      let theme = getThemeForLevel(level);
+      let t = Array(rows).fill().map(()=>Array(COLS).fill('grass'));
+      for(let r=0; r<rows; r++) {
+        for(let c=0; c<COLS; c++) {
+          let rand = Math.random();
+          let cum = 0;
+          cum += theme.waterProb; if(rand < cum) { t[r][c]='water'; continue; }
+          cum += theme.lavaProb; if(rand < cum) { t[r][c]='lava'; continue; }
+          cum += theme.rockProb; if(rand < cum) { t[r][c]='rock'; continue; }
+          cum += theme.mudProb; if(rand < cum) { t[r][c]='mud'; continue; }
+          cum += theme.iceProb; if(rand < cum) { t[r][c]='ice'; continue; }
+          cum += theme.mountainProb; if(rand < cum) { t[r][c]='mountain'; continue; }
+        }
+      }
+      return t;
+    }
+
+    // ======================= BOSS系统 =======================
+    function generateBossForLevel(level, index) {
+      const namePool = ["虚空领主","熔核巨兽","冰霜巨龙","混沌魔像","末日使者","风暴女王","大地泰坦","暗影刺客"];
+      let difficulty = level/50;
+      let baseHp = 20 + Math.floor(level*1.5) + index*8;
+      let baseSpeed = 0.7 + (level*0.007);
+      let reward = 300 + level*20 + index*60;
+      return { name: `${namePool[index%namePool.length]} Lv.${level}`, hp: Math.floor(baseHp*(1+difficulty*0.2)), speed: Math.min(1.25, baseSpeed), color: `hsl(${(level*15+index*40)%360},70%,50%)`, reward: reward };
+    }
+    function getBossesForLevel(level) { let bosses = []; for(let i=0;i<5;i++) bosses.push(generateBossForLevel(level, i)); return bosses; }
+    function enhanceBoss(boss, level) { return { ...boss, hp: Math.floor(boss.hp*1.35), speed: boss.speed*1.06, attackBonus:1, reward: boss.reward+180 }; }
+    function getEnhancedBosses(level) { return getBossesForLevel(level).map(b => enhanceBoss(b, level)); }
+
+    const PLANT_COST = { Pea:50, Snow:75, Sun:50, Nut:75, Pot:50, Potato:25, Cherry:150, TallNut:125 };
+    const PLANT_HP = { Pea:3, Snow:3, Sun:3, Nut:6, Pot:5, Potato:1, Cherry:1, TallNut:12 };
+    const ZOMBIE_TYPES = { Normal:{hp:3,speed:1.6,color:"#c0a080"}, Creeper:{hp:4,speed:1.5,color:"#2d7d2d"}, Enderman:{hp:3,speed:2.4,color:"#1a1a1a"}, Digger:{hp:3,speed:1.7,color:"#996633"}, Giant:{hp:8,speed:1.0,color:"#6b4c3c"} };
+
+    // ======================= 游戏核心（后台运行优化） =======================
+    function startLevel(level) {
+      if(level > TOTAL_LEVELS) { alert("🏆 恭喜！你已完成全部600关！游戏通关！🏆"); showMenu(); return; }
+      if(updateInterval) clearInterval(updateInterval);
+      if(animFrameId) cancelAnimationFrame(animFrameId);
+      currentLevel = level;
+      ROWS = getRowsForLevel(level);
+      CELL_H = ROWS <= 18 ? 120 : ROWS <= 30 ? 95 : 72;
+      gameCanvas.height = ROWS * CELL_H;
+      gameCanvas.width = COLS * CELL_W;
+      wave = 1; sun = 150; bossesDefeatedInLevel = 0; gameLog = [];
+      terrain = generateComplexTerrain(level, ROWS);
+      grid = Array(ROWS).fill().map(()=>Array(COLS).fill(null));
+      zombies = []; bullets = []; sunDrops = []; screenShake = Array(ROWS).fill(0);
+      logicAccumulator = 0;
+      sunAmountEl.innerText = sun;
+      updateCurrencyDisplay();
+      gameScreen.style.display = "block"; stockModule.style.display = "none"; menuScreen.style.display = "none";
+      gameState = "PLAYING";
+      addLog(`开始关卡${level} (${ROWS}行) 地形:${getThemeForLevel(level).name}`);
+      let now = performance.now();
+      lastWaveTime = now; lastZombieSpawnTime = now; lastGameUpdate = now;
+
+      // 渲染循环 (与逻辑分离)
+      function renderLoop() {
+        if(gameState==="PLAYING") draw();
+        animFrameId = requestAnimationFrame(renderLoop);
+      }
+      renderLoop();
+
+      // 逻辑更新循环 (基于真实时间追赶)
+      updateInterval = setInterval(() => {
+        if (gameState !== "PLAYING") return;
+        const nowTime = performance.now();
+        let delta = nowTime - lastGameUpdate;
+        // 防止长时间后台造成巨大累积（最多追2秒）
+        if (delta > 2000) delta = 2000;
+        logicAccumulator += delta;
+        lastGameUpdate = nowTime;
+
+        // 固定步长追赶，保持逻辑稳定性
+        while (logicAccumulator >= FIXED_STEP) {
+          // 波次推进：每10秒自动增加一波
+          if (nowTime - lastWaveTime >= 10000) {
+            wave++;
+            lastWaveTime += 10000; // 累加而非重置为nowTime，避免累积误差
+            if (wave > WIN_WAVE) wave = WIN_WAVE;
+          }
+
+          // 僵尸生成控制
+          let spawnInterval = Math.max(350, 1500 - Math.floor(currentLevel*1.1) - Math.floor(wave/4));
+          if (nowTime - lastZombieSpawnTime >= spawnInterval && zombies.filter(z=>!z.isBoss).length < 16 && !zombies.some(z=>z.isBoss)) {
+            let types = ["Normal","Creeper","Enderman","Digger"]; if(wave>=15) types.push("Giant");
+            let type = types[Math.floor(Math.random()*types.length)];
+            let base = ZOMBIE_TYPES[type];
+            let speedBonus = 1 + Math.min(0.55, (currentLevel-1)*0.018);
+            let hpBonus = Math.floor(currentLevel/4);
+            zombies.push({
+              x:COLS*CELL_W, row:Math.floor(Math.random()*ROWS),
+              hp:base.hp+hpBonus, maxHp:base.hp+hpBonus, type,
+              baseSpeed:base.speed*speedBonus, speed:base.speed*speedBonus,
+              walkPhase:Math.random()*100, slowTimer:0, attackCd:0,
+              color:base.color, isBoss:false
+            });
+            lastZombieSpawnTime = nowTime;
+          }
+
+          // BOSS波次检测
+          let bossWaveMap = [10,20,30,40,50];
+          if(bossesDefeatedInLevel<5 && wave>=bossWaveMap[bossesDefeatedInLevel] && !zombies.some(z=>z.isBoss)) {
+            let enhancedBosses = getEnhancedBosses(currentLevel);
+            let bossData = enhancedBosses[bossesDefeatedInLevel];
+            let row = Math.floor(Math.random() * ROWS);
+            zombies.push({
+              x:COLS*CELL_W, row, hp:bossData.hp, maxHp:bossData.hp, type:"BOSS",
+              name:bossData.name, color:bossData.color, isBoss:true,
+              baseSpeed:bossData.speed, speed:bossData.speed,
+              walkPhase:Math.random()*100, slowTimer:0, attackCd:0,
+              reward:bossData.reward, attackBonus:1
+            });
+            addLog(`👾 BOSS登场: ${bossData.name} (HP:${bossData.hp})`);
+          }
+
+          // 胜利检测
+          if(wave>=WIN_WAVE && zombies.length===0 && bossesDefeatedInLevel>=5) {
+            gameOver(true); return;
+          }
+
+          // 更新游戏逻辑 (固定步长因子1.0)
+          updateGameLogic(1.0);
+          logicAccumulator -= FIXED_STEP;
+        }
+        saveGameLocal();
+      }, 33);
+    }
+
+    function updateGameLogic(timeFactor=1.0) {
+      if(gameState!=="PLAYING") return;
+
+      // 植物行为
+      for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++){
+        let p=grid[r][c]; if(!p) continue;
+        if(terrain[r][c]==='lava'){
+          if(p.fireResistTime && p.fireResistTime>0) p.fireResistTime-=timeFactor;
+          else {
+            if(p.type==="Pot" && p.plant) p.plant.hp -= 0.2*timeFactor;
+            else p.hp -= 0.2*timeFactor;
+            if(p.hp<=0 || (p.plant && p.plant.hp<=0)) grid[r][c]=null;
+            continue;
+          }
+        }
+        let actual = (p.type==="Pot" && p.plant) ? p.plant : p;
+        if(!actual || actual.hp<=0) {
+          if(p.type==="Pot" && p.plant && p.plant.hp<=0) p.plant=null;
+          else if(p.hp<=0) grid[r][c]=null;
+          continue;
+        }
+
+        if(actual.type==="Pea" && (actual.cd||0)<=0 && zombies.some(z=>z.row===r && z.x<COLS*CELL_W)){
+          let dmg=1+plantUpgrades.pea_damage;
+          bullets.push({x:c*CELL_W+80, y:r*CELL_H+50, row:r, type:"pea", damage:dmg});
+          let cdBase=22-plantUpgrades.pea_speed*2; actual.cd=Math.max(11, cdBase);
+        } else if(actual.type==="Snow" && (actual.cd||0)<=0 && zombies.some(z=>z.row===r && z.x<COLS*CELL_W)){
+          bullets.push({x:c*CELL_W+80, y:r*CELL_H+50, row:r, type:"ice", damage:1}); actual.cd=26;
+        } else if(actual.type==="Sun" && (actual.sunTimer||0)<=0){
+          let gain=25+plantUpgrades.sun_value*5; sun+=gain;
+          sunDrops.push({x:c*CELL_W+50, y:r*CELL_H+30, life:55});
+          actual.sunTimer=180; sunAmountEl.innerText=Math.floor(sun);
+        } else if(actual.type==="Potato" && actual.ready===undefined){
+          actual.ready=true; actual.fuse=85;
+        } else if(actual.type==="Potato" && actual.fuse!==undefined && actual.fuse<=0){
+          for(let i=0;i<zombies.length;i++){
+            let z=zombies[i];
+            if(Math.abs(z.row-r)<=1 && Math.abs(Math.floor(z.x/CELL_W)-c)<=1){ zombies.splice(i,1); i--; }
+          }
+          grid[r][c]=null; screenShake[r]=10;
+        } else if(actual.type==="Cherry" && (actual.cd||0)<=0){
+          zombies=[]; grid[r][c]=null; screenShake[r]=14;
+        }
+
+        if(actual.cd && actual.cd>0) actual.cd-=timeFactor;
+        if(actual.sunTimer && actual.sunTimer>0) actual.sunTimer-=timeFactor;
+        if(actual.fuse!==undefined && actual.fuse>0) actual.fuse-=timeFactor;
+      }
+
+      // 子弹移动
+      bullets.forEach(b => b.x += (b.type==="ice"?9:12)*timeFactor);
+      bullets = bullets.filter(b => b.x < COLS*CELL_W+60);
+
+      // 子弹碰撞
+      for(let i=0;i<bullets.length;i++) for(let j=0;j<zombies.length;j++){
+        let z=zombies[j];
+        if(z.row===bullets[i].row && bullets[i].x+10>z.x && bullets[i].x<z.x+CELL_W){
+          z.hp-=bullets[i].damage;
+          if(bullets[i].type==="ice") z.slowTimer=75;
+          if(z.hp<=0){
+            if(z.isBoss){
+              sun+=z.reward; bossesDefeatedInLevel++;
+              sunAmountEl.innerText=Math.floor(sun);
+              addLog(`💀 击败BOSS: ${z.name} +${z.reward}☀️`);
+            }
+            zombies.splice(j,1);
+          }
+          bullets.splice(i,1); i--; break;
+        }
+      }
+
+      // 僵尸移动与攻击
+      for(let i=0;i<zombies.length;i++){
+        let z=zombies[i];
+        let effSpeed = z.speed;
+        if(z.slowTimer>0){
+          effSpeed = z.baseSpeed*0.5;
+          z.slowTimer -= timeFactor;
+          if(z.slowTimer<=0) z.speed=z.baseSpeed;
+        } else z.speed = z.baseSpeed;
+
+        let moveDist = effSpeed * timeFactor;
+        let colIdx = Math.floor(z.x/CELL_W);
+        if(colIdx>=0 && colIdx<COLS){
+          let tile=terrain[z.row][colIdx];
+          let mul=(tile==='water')?0.55:(tile==='ice')?0.65:(tile==='mud'||tile==='mountain')?0.75:1;
+          if(tile!=='rock') z.x -= moveDist * mul;
+          if(tile==='lava') z.hp -= 0.03*timeFactor;
+        } else z.x -= moveDist;
+
+        let attackCol = Math.floor(z.x/CELL_W);
+        if(attackCol>=0 && attackCol<COLS && grid[z.row][attackCol]){
+          let target = grid[z.row][attackCol];
+          if(z.attackCd<=0){
+            let dmg = z.isBoss?2+(z.attackBonus||0):(z.type==="Giant"?2:1);
+            if(target.type==="Pot" && target.plant) target.plant.hp -= dmg;
+            else target.hp -= dmg;
+            z.attackCd = 28;
+            if((target.hp && target.hp<=0) || (target.plant && target.plant.hp<=0)) {
+              if(target.type==="Pot" && target.plant && target.plant.hp<=0) target.plant=null;
+              else grid[z.row][attackCol]=null;
+            }
+            screenShake[z.row]=7;
+          }
+        }
+        if(z.attackCd>0) z.attackCd -= timeFactor;
+        if(z.x < 12) { gameOver(false); return; }
+      }
+
+      for(let i=0;i<ROWS;i++) if(screenShake[i]>0) screenShake[i]-=0.35*timeFactor;
+      for(let i=0;i<sunDrops.length;i++){
+        sunDrops[i].y += 1.2*timeFactor;
+        if(sunDrops[i].life--<=0 || sunDrops[i].y>ROWS*CELL_H) sunDrops.splice(i,1), i--;
+      }
+    }
+
+    function draw(){
+      ctx.clearRect(0,0,gameCanvas.width,gameCanvas.height);
+      let theme = getThemeForLevel(currentLevel);
+
+      // 绘制地形
+      for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++){
+        let type=terrain[r][c], x=c*CELL_W, y=r*CELL_H;
+        if(type==='grass'){ ctx.fillStyle=theme.mainGrass; ctx.fillRect(x,y,CELL_W,CELL_H); ctx.fillStyle=theme.altColor2; for(let i=0;i<25;i++) ctx.fillRect(x+(i*13%CELL_W), y+(i*7%CELL_H),3,3); }
+        else if(type==='water'){ ctx.fillStyle="#2a6b8c"; ctx.fillRect(x,y,CELL_W,CELL_H); ctx.fillStyle="#4a9bc4"; for(let i=0;i<20;i++) ctx.fillRect(x+(i*19%CELL_W), y+(i*11%CELL_H),5,5); }
+        else if(type==='lava'){ ctx.fillStyle="#cc4400"; ctx.fillRect(x,y,CELL_W,CELL_H); ctx.fillStyle="#ff7700"; for(let i=0;i<25;i++) ctx.fillRect(x+(i*17%CELL_W), y+(i*9%CELL_H),4,4); }
+        else if(type==='rock'){ ctx.fillStyle="#5a5a5a"; ctx.fillRect(x,y,CELL_W,CELL_H); ctx.fillStyle="#7a7a7a"; for(let i=0;i<18;i++) ctx.fillRect(x+(i*13%CELL_W), y+(i*7%CELL_H),5,5); }
+        else if(type==='mud'){ ctx.fillStyle="#8b5a2b"; ctx.fillRect(x,y,CELL_W,CELL_H); }
+        else if(type==='ice'){ ctx.fillStyle="#aaddff"; ctx.fillRect(x,y,CELL_W,CELL_H); ctx.fillStyle="#ffffff"; for(let i=0;i<18;i++) ctx.fillRect(x+(i*17%CELL_W), y+(i*9%CELL_H),4,4); }
+        else if(type==='mountain'){ ctx.fillStyle="#6a6a5a"; ctx.fillRect(x,y,CELL_W,CELL_H); ctx.fillStyle="#8a8a7a"; for(let i=0;i<30;i++){ let px=x+(i*11%CELL_W), py=y+(i*13%CELL_H); ctx.fillRect(px,py,5,5); } ctx.fillStyle="#4a4a3a"; for(let i=0;i<15;i++){ ctx.fillRect(x+10+(i*37%CELL_W), y+5+(i*29%CELL_H),7,7); } }
+      }
+
+      // 绘制植物
+      for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++){
+        let cell=grid[r][c]; if(!cell) continue;
+        let x=c*CELL_W, y=r*CELL_H;
+        if(cell.type==="Pot"){ ctx.fillStyle="#c97e4a"; ctx.fillRect(x+28,y+28,44,64); ctx.fillStyle="#8b5a30"; ctx.fillRect(x+32,y+32,36,56); if(cell.plant) drawPlant(ctx,x,y,cell.plant); }
+        else drawPlant(ctx,x,y,cell);
+      }
+
+      function drawPlant(ctx,x,y,p){
+        if(p.type==="Pea"){ ctx.fillStyle="#2f6b2f"; ctx.fillRect(x+15,y+40,70,55); ctx.fillStyle="#3e873e"; ctx.fillRect(x+20,y+22,60,25); ctx.fillStyle="#418f3c"; ctx.fillRect(x+30,y+8,40,28); ctx.fillStyle="#000"; ctx.fillRect(x+35,y+22,6,6); ctx.fillRect(x+57,y+22,6,6); }
+        else if(p.type==="Snow"){ ctx.fillStyle="#3c9fbf"; ctx.fillRect(x+15,y+40,70,55); ctx.fillStyle="#6ad4ff"; ctx.fillRect(x+30,y+8,40,28); ctx.fillStyle="#000"; ctx.fillRect(x+35,y+22,6,6); ctx.fillRect(x+57,y+22,6,6); }
+        else if(p.type==="Sun"){ ctx.fillStyle="#e5b813"; ctx.fillRect(x+15,y+45,70,42); ctx.fillStyle="#b87c1e"; ctx.fillRect(x+35,y+12,30,24); ctx.fillStyle="#000"; ctx.fillRect(x+42,y+22,5,5); ctx.fillRect(x+52,y+22,5,5); for(let i=0;i<6;i++){ ctx.fillStyle="#ffcc33"; ctx.fillRect(x+38+Math.sin(i*1.05)*14, y+8+i*5,6,6); } }
+        else if(p.type==="Nut"){ ctx.fillStyle="#aa7c4a"; ctx.fillRect(x+28,y+28,44,64); ctx.fillStyle="#c49a6c"; ctx.fillRect(x+32,y+32,36,56); }
+        else if(p.type==="Potato"){ ctx.fillStyle="#a56b2f"; ctx.fillRect(x+28,y+38,44,44); ctx.fillStyle="#c48a4a"; ctx.fillRect(x+34,y+44,32,32); }
+        else if(p.type==="Cherry"){ ctx.fillStyle="#dd4444"; ctx.beginPath(); ctx.arc(x+50,y+58,22,0,Math.PI*2); ctx.fill(); ctx.fillStyle="#ff6666"; ctx.beginPath(); ctx.arc(x+44,y+50,10,0,Math.PI*2); ctx.fill(); }
+        else if(p.type==="TallNut"){ ctx.fillStyle="#c49a6c"; ctx.fillRect(x+28,y+16,44,84); ctx.fillStyle="#ddb88a"; ctx.fillRect(x+32,y+20,36,76); }
+      }
+
+      // 阳光掉落
+      sunDrops.forEach(d=>{ ctx.fillStyle="#ffdd44"; ctx.beginPath(); ctx.arc(d.x,d.y,Math.max(6,CELL_H*0.1),0,Math.PI*2); ctx.fill(); });
+
+      // 子弹
+      bullets.forEach(b=>{ ctx.fillStyle=b.type==="ice"?"#88ddff":"#4caf50"; ctx.beginPath(); ctx.arc(b.x,b.y,Math.max(5,CELL_H*0.055),0,Math.PI*2); ctx.fill(); });
+
+      // 僵尸
+      zombies.forEach(z=>{
+        ctx.save(); let shakeOffset = (screenShake[z.row]||0)*(Math.random()-0.5)*2;
+        ctx.translate(z.x+CELL_W*0.5, z.row*CELL_H+CELL_H/2+Math.sin(Date.now()*0.005+z.walkPhase)*3+shakeOffset);
+        let zw=CELL_W*0.5, zh=CELL_H*0.3; ctx.fillStyle=z.color; ctx.fillRect(-zw/2,-zh/2,zw,zh);
+        ctx.fillStyle="#3a2819"; ctx.fillRect(-zw/2+3,-zh/2-6,zw-6,7);
+        ctx.fillStyle="#2e8b57"; ctx.fillRect(-zw/4,-zh/2+4,6,6); ctx.fillRect(zw/4-6,-zh/2+4,6,6);
+        ctx.fillStyle="#000"; ctx.fillRect(-zw/4+2,-zh/2+6,2,2); ctx.fillRect(zw/4-4,-zh/2+6,2,2);
+        let percent=z.hp/z.maxHp, barW=zw; ctx.fillStyle="#c33"; ctx.fillRect(-barW/2,-zh/2-14,barW*percent,4); ctx.fillStyle="#5a0000"; ctx.fillRect(-barW/2+barW*percent,-zh/2-14,barW*(1-percent),4);
+        if(z.isBoss){ ctx.fillStyle="#ffaa22"; ctx.font=`bold ${Math.max(9,CELL_H*0.1)}px 'Press Start 2P'`; ctx.fillText("BOSS",-16,-zh/2-20); }
+        ctx.restore();
+      });
+
+      // 界面文字
+      ctx.font=`${Math.max(10,CELL_H*0.1)}px 'Press Start 2P'`; ctx.fillStyle="#fff3c9";
+      ctx.fillText(`关卡 ${currentLevel}/${TOTAL_LEVELS} · ${getThemeForLevel(currentLevel).name} · 波次 ${wave}/${WIN_WAVE}  BOSS:${bossesDefeatedInLevel}/5 · 行:${ROWS}`, 15, Math.min(32,CELL_H*0.3));
+
+      // 昼夜叠加
+      ctx.fillStyle = getDaylightTint(currentLevel); ctx.fillRect(0,0,gameCanvas.width,gameCanvas.height);
+    }
+
+    function gameOver(win){
+      if(gameState!=="PLAYING") return;
+      gameState="END";
+      if(updateInterval) clearInterval(updateInterval);
+      let coinGain = convertSunToCurrency(sun);
+      if(win){
+        if(wave>=WIN_WAVE && bossesDefeatedInLevel>=5){
+          if(currentLevel > completedLevels){ completedLevels=currentLevel; saveGameLocal(); addLog(`🎉 通关关卡${currentLevel}`); alert(`🎉 通关！关卡${currentLevel}完成！${coinGain>0?'剩余阳光转换'+coinGain+'游戏币':''}`); }
+          else alert(`✅ 关卡${currentLevel}再次通关！${coinGain>0?'获得'+coinGain+'游戏币':''}`);
+        }
+      } else { addLog("💀 游戏失败"); alert(`💀 游戏失败！僵尸突破了防线。${coinGain>0?'剩余阳光转换'+coinGain+'游戏币':''}`); }
+      updateCurrencyDisplay();
+      setTimeout(()=>showMenu(), 1500);
+    }
+
+    function showMenu(){
+      if(updateInterval) clearInterval(updateInterval);
+      if(animFrameId) cancelAnimationFrame(animFrameId);
+      gameState="MENU"; gameScreen.style.display="none"; stockModule.style.display="none"; menuScreen.style.display="block";
+      updateCurrencyDisplay(); renderMenuUpgradePanel(); saveGameLocal();
+    }
+
+    function renderLevelList(){
+      levelsContainer.innerHTML="";
+      for(let i=1;i<=Math.min(completedLevels+1, TOTAL_LEVELS);i++){
+        let theme=getThemeForLevel(i), rows=getRowsForLevel(i);
+        let div=document.createElement("div"); div.className="level-card";
+        div.innerHTML=`<div style="font-size:10px;">关卡 ${i}</div><div style="font-size:7px;">${theme.name}</div><div style="font-size:7px;">${rows}行</div>`;
+        div.onclick=()=>{ levelsContainer.style.display="none"; startLevel(i); };
+        levelsContainer.appendChild(div);
+      }
+      if(completedLevels>=TOTAL_LEVELS){
+        let div=document.createElement("div"); div.className="level-card"; div.innerHTML="<div>🏆</div><div style='font-size:7px;'>全部通关!</div>";
+        levelsContainer.appendChild(div);
+      }
+    }
+
+    function renderMenuUpgradePanel(){
+      if(!menuUpgradePanel) return;
+      menuUpgradePanel.innerHTML = `
+        <button class="btn upgrade-btn" data-upgrade="pea_damage">🌱伤害+1 (100🪙) [${plantUpgrades.pea_damage}]</button>
+        <button class="btn upgrade-btn" data-upgrade="pea_speed">🌱攻速↑ (80🪙) [${plantUpgrades.pea_speed}]</button>
+        <button class="btn upgrade-btn" data-upgrade="sun_value">🌻阳光+5 (120🪙) [${plantUpgrades.sun_value}]</button>
+        <button class="btn upgrade-btn" data-upgrade="nut_hp">🥜HP+3 (90🪙) [${plantUpgrades.nut_hp}]</button>`;
+      menuUpgradePanel.querySelectorAll('.upgrade-btn').forEach(btn=>{
+        btn.onclick=()=>{
+          let id=btn.dataset.upgrade, cost={pea_damage:100, pea_speed:80, sun_value:120, nut_hp:90}[id];
+          if(applyUpgrade(id,cost)){ alert("✅ 升级成功！"); renderMenuUpgradePanel(); updateCurrencyDisplay(); }
+          else alert("❌ 游戏币不足！");
+        };
+      });
+    }
+
+    // ======================= A股模拟股市（真实股票） =======================
+    const REAL_STOCKS = [
+      { symbol:"600519", name:"贵州茅台", basePrice:1850, volatility:0.018 },
+      { symbol:"000858", name:"五粮液", basePrice:162, volatility:0.022 },
+      { symbol:"300750", name:"宁德时代", basePrice:210, volatility:0.032 },
+      { symbol:"002594", name:"比亚迪", basePrice:268, volatility:0.028 },
+      { symbol:"601318", name:"中国平安", basePrice:48, volatility:0.020 },
+      { symbol:"000333", name:"美的集团", basePrice:62, volatility:0.025 },
+      { symbol:"600036", name:"招商银行", basePrice:39, volatility:0.019 },
+      { symbol:"002415", name:"海康威视", basePrice:36, volatility:0.026 },
+      { symbol:"300059", name:"东方财富", basePrice:18, volatility:0.038 },
+      { symbol:"601012", name:"隆基绿能", basePrice:28, volatility:0.035 },
+      { symbol:"600276", name:"恒瑞医药", basePrice:48, volatility:0.024 },
+      { symbol:"000651", name:"格力电器", basePrice:36, volatility:0.022 },
+      { symbol:"002475", name:"立讯精密", basePrice:32, volatility:0.030 },
+      { symbol:"600900", name:"长江电力", basePrice:24, volatility:0.015 },
+      { symbol:"300124", name:"汇川技术", basePrice:66, volatility:0.028 },
+      { symbol:"601899", name:"紫金矿业", basePrice:12, volatility:0.033 },
+      { symbol:"600809", name:"山西汾酒", basePrice:280, volatility:0.027 },
+      { symbol:"000568", name:"泸州老窖", basePrice:230, volatility:0.026 },
+      { symbol:"002714", name:"牧原股份", basePrice:48, volatility:0.031 },
+      { symbol:"300274", name:"阳光电源", basePrice:98, volatility:0.040 }
+    ];
+    let stockList = [];
+    let coinPositions = {};
+    let marginAccount = { debt:0, interestRate:0.0004 };
+    let marketWave = 0;
+    let assetHistory = [];
+    let stockUpdateTimer = null;
+    let equityChart = null;
+    let selectedStockSymbol = null;
+
+    function getTotalAssetValue(){
+      let stockValue = 0;
+      stockList.forEach(s => { stockValue += (coinPositions[s.symbol]||0) * s.price; });
+      return globalCurrency + stockValue - marginAccount.debt;
+    }
+
+    function initStockModule(){
+      if(stockList.length===0){
+        REAL_STOCKS.forEach(s => {
+          stockList.push({
+            symbol: s.symbol, name: s.name, price: s.basePrice, basePrice: s.basePrice,
+            volatility: s.volatility, history: [s.basePrice], change:0, changePercent:0,
+            preClose: s.basePrice
+          });
+        });
+      }
+      if(Object.keys(coinPositions).length===0) REAL_STOCKS.forEach(s => coinPositions[s.symbol]=0);
+      if(assetHistory.length===0) assetHistory.push({ time: Date.now(), value: getTotalAssetValue() });
+      selectedStockSymbol = stockList[0].symbol;
+      renderStockUI();
+      if(stockUpdateTimer) clearInterval(stockUpdateTimer);
+      stockUpdateTimer = setInterval(updateStockPrices, 3000);
+      updateCurrencyDisplay();
+    }
+
+    function updateStockPrices(){
+      marketWave += 0.06;
+      let marketBias = Math.sin(marketWave) * 0.006;
+      stockList.forEach(s => {
+        let randomChange = (Math.random()-0.5)*2*s.volatility;
+        let changePct = randomChange + marketBias;
+        let newPrice = s.price * (1 + changePct);
+        let limitUp = s.preClose * 1.10, limitDown = s.preClose * 0.90;
+        newPrice = Math.min(limitUp, Math.max(limitDown, newPrice));
+        s.price = Math.round(newPrice*100)/100;
+        s.change = Math.round((s.price - s.preClose)*100)/100;
+        s.changePercent = Math.round((s.change / s.preClose)*10000)/100;
+        s.history.push(s.price);
+        if(s.history.length>200) s.history.shift();
+      });
+      marginAccount.debt *= (1 + marginAccount.interestRate);
+      marginAccount.debt = Math.round(marginAccount.debt*100)/100;
+      assetHistory.push({ time: Date.now(), value: getTotalAssetValue() });
+      if(assetHistory.length>300) assetHistory.shift();
+      refreshStockDisplay();
+      updateEquityChart();
+    }
+
+    function renderStockUI(){
+      let totalStockVal=0; stockList.forEach(s=>totalStockVal+=(coinPositions[s.symbol]||0)*s.price);
+      let totalAsset=getTotalAssetValue();
+      let html = `
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px;">
+        <h2 style="font-size:13px;color:#ffcc44;">📈 A股市场 · 实时模拟</h2>
+        <button class="btn" id="backToMenuFromStock" style="font-size:8px;">🏠 返回菜单</button>
+      </div>
+      <div class="asset-summary">
+        <div>💰 现金: <b>${Math.floor(globalCurrency)}</b> 🪙</div>
+        <div>📦 股票市值: <b>${Math.floor(totalStockVal)}</b> 🪙</div>
+        <div>🏦 总资产: <b>${Math.floor(totalAsset)}</b> 🪙</div>
+        <div style="color:${marginAccount.debt>0?'#ff6666':'#88cc88'}">💳 融资债务: <b>${marginAccount.debt.toFixed(1)}</b> 🪙</div>
+      </div>
+      <div class="stock-grid">
+        <div class="stock-card">
+          <h3>📋 真实A股 (点击选中)</h3>
+          <table class="stock-table"><thead><tr><th>代码/名称</th><th>价格</th><th>涨跌</th><th>持仓</th></tr></thead><tbody id="stockTableBody"></tbody></table>
+          <div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+            <span style="font-size:8px;">选中: <b id="selectedStockLabel">${selectedStockSymbol||'-'}</b></span>
+            <input type="number" id="tradeQty" class="trade-input" placeholder="股数" value="10" style="width:70px;" min="1" step="1">
+            <button class="btn btn-buy" id="btnBuy">买入</button>
+            <button class="btn btn-sell" id="btnSell">卖出</button>
+          </div>
+          <div style="font-size:7px;color:#aaa;margin-top:4px;">A股涨跌停±10% · T+0模拟</div>
+        </div>
+        <div class="stock-card">
+          <h3>📦 持仓列表</h3>
+          <div id="positionsList"></div>
+          <hr style="border-color:#233554;margin:8px 0;">
+          <h3>💳 融资融券</h3>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;">
+            <input type="number" id="marginAmount" class="trade-input" placeholder="金额" value="500" style="width:80px;" min="1">
+            <button class="btn btn-margin" id="btnBorrow">借入</button>
+            <button class="btn btn-repay" id="btnRepay">偿还</button>
+          </div>
+          <div style="font-size:7px;margin-top:6px;color:#aac;">⚠️ 融资利率: ${(marginAccount.interestRate*100).toFixed(2)}%/周期</div>
+        </div>
+      </div>
+      <div class="chart-container">
+        <h3 style="font-size:9px;margin-bottom:4px;">📊 总资产曲线</h3>
+        <canvas id="equityChartCanvas"></canvas>
+      </div>`;
+      stockModule.innerHTML = html;
+      refreshStockDisplay();
+      document.getElementById('backToMenuFromStock').onclick = ()=>{
+        if(stockUpdateTimer) clearInterval(stockUpdateTimer); stockUpdateTimer=null;
+        stockModule.style.display="none"; menuScreen.style.display="block"; updateCurrencyDisplay(); renderMenuUpgradePanel();
+      };
+      document.getElementById('btnBuy').onclick = ()=> tradeStock('buy');
+      document.getElementById('btnSell').onclick = ()=> tradeStock('sell');
+      document.getElementById('btnBorrow').onclick = ()=> borrowMargin();
+      document.getElementById('btnRepay').onclick = ()=> repayMargin();
+      updateEquityChart();
+    }
+
+    function refreshStockDisplay(){
+      let tbody = document.getElementById('stockTableBody');
+      if(!tbody) return;
+      tbody.innerHTML = stockList.map(s => {
+        let cls = s.change>=0 ? 'up' : 'down', arrow = s.change>=0 ? '▲' : '▼';
+        let selClass = selectedStockSymbol===s.symbol ? 'sel-row' : '';
+        return `<tr class="${selClass}" data-sym="${s.symbol}">
+          <td>${s.symbol}<br><span style="font-size:7px;color:#aaa;">${s.name}</span></td>
+          <td>${s.price.toFixed(2)}</td>
+          <td class="${cls}">${arrow} ${Math.abs(s.changePercent).toFixed(2)}%</td>
+          <td>${coinPositions[s.symbol]||0}</td>
+        </tr>`;
+      }).join('');
+      tbody.querySelectorAll('tr').forEach(row => row.onclick = ()=>{ selectedStockSymbol=row.dataset.sym; document.getElementById('selectedStockLabel').innerText=selectedStockSymbol; refreshStockDisplay(); });
+      let posDiv = document.getElementById('positionsList');
+      if(posDiv){
+        let hasPos=false;
+        posDiv.innerHTML = stockList.filter(s=>(coinPositions[s.symbol]||0)>0).map(s=>{ hasPos=true; return `<div class="position-item"><span>${s.symbol}</span><span>${coinPositions[s.symbol]}股</span><span>≈${Math.floor(coinPositions[s.symbol]*s.price)}🪙</span></div>`; }).join('');
+        if(!hasPos) posDiv.innerHTML = '<div style="font-size:8px;color:#888;">暂无持仓</div>';
+      }
+      let totalStockVal=0; stockList.forEach(s=>totalStockVal+=(coinPositions[s.symbol]||0)*s.price);
+      let totalAsset=getTotalAssetValue();
+      let summaryDiv = stockModule.querySelector('.asset-summary');
+      if(summaryDiv) summaryDiv.innerHTML = `
+        <div>💰 现金: <b>${Math.floor(globalCurrency)}</b> 🪙</div>
+        <div>📦 股票市值: <b>${Math.floor(totalStockVal)}</b> 🪙</div>
+        <div>🏦 总资产: <b>${Math.floor(totalAsset)}</b> 🪙</div>
+        <div style="color:${marginAccount.debt>0?'#ff6666':'#88cc88'}">💳 融资债务: <b>${marginAccount.debt.toFixed(1)}</b> 🪙</div>`;
+    }
+
+    function tradeStock(action){
+      if(!selectedStockSymbol) { alert("请先在表格中选择一只股票"); return; }
+      let qty = parseInt(document.getElementById('tradeQty')?.value) || 0;
+      if(qty<=0) { alert("请输入有效股数"); return; }
+      let stock = stockList.find(s=>s.symbol===selectedStockSymbol);
+      if(!stock) return;
+      let totalCost = stock.price * qty;
+      let commission = Math.max(5, totalCost * 0.00025);
+      if(action==='buy'){
+        let needed = totalCost + commission;
+        if(globalCurrency >= needed){
+          globalCurrency -= needed;
+          coinPositions[stock.symbol] = (coinPositions[stock.symbol]||0) + qty;
+          addLog(`买入${stock.symbol} ${qty}股 @${stock.price.toFixed(2)}`);
+          saveCurrencyAndUpgrades(); refreshStockDisplay(); updateCurrencyDisplay();
+        } else alert(`❌ 现金不足！需要${Math.floor(needed)}🪙`);
+      } else {
+        let held = coinPositions[stock.symbol]||0;
+        if(held >= qty){
+          let stampTax = totalCost * 0.001;
+          let proceeds = totalCost - commission - stampTax;
+          globalCurrency += proceeds;
+          coinPositions[stock.symbol] = held - qty;
+          addLog(`卖出${stock.symbol} ${qty}股 @${stock.price.toFixed(2)}`);
+          saveCurrencyAndUpgrades(); refreshStockDisplay(); updateCurrencyDisplay();
+        } else alert(`❌ 持仓不足！持有${held}股`);
+      }
+      updateEquityChart();
+    }
+
+    function borrowMargin(){
+      let amount = parseFloat(document.getElementById('marginAmount')?.value) || 0;
+      if(amount<=0) { alert("请输入有效金额"); return; }
+      if(amount>50000) { alert("单次借款上限50000🪙"); return; }
+      marginAccount.debt += amount;
+      globalCurrency += amount;
+      addLog(`融资借入${Math.floor(amount)}🪙`);
+      saveCurrencyAndUpgrades(); refreshStockDisplay(); updateCurrencyDisplay(); updateEquityChart();
+    }
+
+    function repayMargin(){
+      let amount = parseFloat(document.getElementById('marginAmount')?.value) || 0;
+      if(amount<=0) { alert("请输入有效金额"); return; }
+      if(amount > marginAccount.debt) amount = marginAccount.debt;
+      if(globalCurrency >= amount){
+        globalCurrency -= amount;
+        marginAccount.debt -= amount;
+        marginAccount.debt = Math.round(marginAccount.debt*100)/100;
+        addLog(`偿还融资${Math.floor(amount)}🪙`);
+        saveCurrencyAndUpgrades(); refreshStockDisplay(); updateCurrencyDisplay(); updateEquityChart();
+      } else alert(`❌ 现金不足！`);
+    }
+
+    function updateEquityChart(){
+      let canvas = document.getElementById('equityChartCanvas');
+      if(!canvas || assetHistory.length<2) return;
+      if(equityChart) equityChart.destroy();
+      let labels = assetHistory.map(a=>new Date(a.time).toLocaleTimeString());
+      let data = assetHistory.map(a=>Math.floor(a.value));
+      equityChart = new Chart(canvas, {
+        type:'line', data:{ labels:labels.slice(-60), datasets:[{ label:'总资产(🪙)', data:data.slice(-60), borderColor:'#00d2d3', backgroundColor:'rgba(0,210,211,0.1)', fill:true, tension:0.3, pointRadius:0, borderWidth:1.5 }] },
+        options:{ responsive:true, maintainAspectRatio:false, animation:{duration:200}, plugins:{legend:{display:false}}, scales:{ x:{ ticks:{color:'#888', font:{size:7}, maxTicksLimit:8}, grid:{color:'#1a2a3a'} }, y:{ ticks:{color:'#888', font:{size:7}, callback:v=>Math.floor(v)+'🪙'}, grid:{color:'#1a2a3a'} } } }
+      });
+    }
+
+    // ======================= 事件绑定 =======================
+    function bindAllEvents(){
+      document.querySelectorAll("#plantButtons .btn[data-plant]").forEach(btn => {
+        btn.onclick = ()=>{ document.querySelectorAll("#plantButtons .btn[data-plant]").forEach(b=>b.classList.remove("sel")); btn.classList.add("sel"); selectedPlant=btn.dataset.plant; };
+      });
+      document.getElementById('showUpgradeBtn').onclick = ()=>{
+        upgradePanel.style.display = upgradePanel.style.display==="none" ? "flex" : "none";
+        upgradePanel.querySelectorAll('.upgrade-btn').forEach(b=>{
+          let uid=b.dataset.upgrade;
+          if(uid==='pea_damage') b.innerText=`🌱伤害+1 (100🪙) [${plantUpgrades.pea_damage}]`;
+          if(uid==='pea_speed') b.innerText=`🌱攻速↑ (80🪙) [${plantUpgrades.pea_speed}]`;
+          if(uid==='sun_value') b.innerText=`🌻阳光+5 (120🪙) [${plantUpgrades.sun_value}]`;
+          if(uid==='nut_hp') b.innerText=`🥜HP+3 (90🪙) [${plantUpgrades.nut_hp}]`;
+        });
+      };
+      upgradePanel.querySelectorAll('.upgrade-btn').forEach(btn=>{
+        btn.onclick=()=>{
+          let id=btn.dataset.upgrade, cost={pea_damage:100, pea_speed:80, sun_value:120, nut_hp:90}[id];
+          if(applyUpgrade(id,cost)){ alert("✅ 升级成功！"); renderMenuUpgradePanel(); updateCurrencyDisplay(); }
+          else alert("❌ 游戏币不足！");
+        };
+      });
+      document.getElementById('backToMenuFromGame').onclick = ()=>{ if(gameState==="PLAYING"){ convertSunToCurrency(sun); sun=150; } showMenu(); };
+      document.getElementById('manualExportBtn').onclick = ()=> exportGameArchive();
+      gameCanvas.addEventListener("click", (e)=>{
+        if(gameState!=="PLAYING") return;
+        let rect=gameCanvas.getBoundingClientRect(), scaleX=gameCanvas.width/rect.width, scaleY=gameCanvas.height/rect.height;
+        let cx=(e.clientX-rect.left)*scaleX, cy=(e.clientY-rect.top)*scaleY;
+        let col=Math.floor(cx/CELL_W), row=Math.floor(cy/CELL_H);
+        if(row>=ROWS||col>=COLS) return;
+        for(let i=0;i<sunDrops.length;i++) if(Math.hypot(sunDrops[i].x-cx, sunDrops[i].y-cy)<CELL_H*0.35){ sun+=25; sunDrops.splice(i,1); sunAmountEl.innerText=Math.floor(sun); return; }
+        if(selectedPlant==="Pot" && !grid[row][col] && terrain[row][col]!=='rock'){
+          if(sun>=PLANT_COST.Pot){ sun-=PLANT_COST.Pot; grid[row][col]={type:"Pot", hp:PLANT_HP.Pot, maxHp:PLANT_HP.Pot, plant:null, fireResistTime:0}; sunAmountEl.innerText=Math.floor(sun); }
+        } else if(PLANT_COST[selectedPlant]){
+          let canPlace = (grid[row][col] && grid[row][col].type==="Pot" && !grid[row][col].plant) || (!grid[row][col] && terrain[row][col]!=='rock' && terrain[row][col]!=='lava');
+          if(canPlace && sun>=PLANT_COST[selectedPlant]){
+            sun-=PLANT_COST[selectedPlant];
+            let hpVal=PLANT_HP[selectedPlant]; if(selectedPlant==="Nut") hpVal=6+plantUpgrades.nut_hp; if(selectedPlant==="TallNut") hpVal=12+plantUpgrades.nut_hp;
+            let newPlant={type:selectedPlant, hp:hpVal, maxHp:hpVal, cd:0, sunTimer:(selectedPlant==="Sun"?20:0), ready:undefined, fuse:undefined};
+            if(grid[row][col]&&grid[row][col].type==="Pot") grid[row][col].plant=newPlant; else grid[row][col]=newPlant;
+            sunAmountEl.innerText=Math.floor(sun);
+          }
+        }
+      });
+      document.getElementById('startGameBtn').onclick = ()=>{ levelsContainer.style.display="flex"; renderLevelList(); };
+      document.getElementById('openStockBtn').onclick = ()=>{ menuScreen.style.display="none"; stockModule.style.display="block"; initStockModule(); };
+      document.getElementById('menuUpgradeBtn').onclick = ()=>{ menuUpgradePanel.style.display = menuUpgradePanel.style.display==="none" ? "flex":"none"; renderMenuUpgradePanel(); };
+    }
+
+    function login(username, password){
+      if(!username.trim()){ loginErrorEl.innerText="用户名不能为空"; return false; }
+      if(!/^\d{8}$/.test(password)){ loginErrorEl.innerText="密码必须是8位数字"; return false; }
+      currentGameUser=username.trim();
+      loadGameLocal(); loadCurrencyAndUpgrades(); updateCurrencyDisplay();
+      loginScreen.style.display="none"; menuScreen.style.display="block";
+      bindAllEvents(); renderMenuUpgradePanel(); menuUpgradePanel.style.display="none"; updateCurrencyDisplay();
+      return true;
+    }
+
+    document.getElementById('loginBtn').onclick = ()=> login(document.getElementById('username').value, document.getElementById('password').value);
+    document.getElementById('password').addEventListener('keydown', e=>{ if(e.key==='Enter') login(document.getElementById('username').value, document.getElementById('password').value); });
+    document.getElementById('username').addEventListener('keydown', e=>{ if(e.key==='Enter') document.getElementById('password').focus(); });
+    updateCurrencyDisplay();
+    console.log("🧊 Cube Defense: Boss Rush · 每关约8分钟 · 后台运行不暂停 · 真实A股已就绪");
+  })();
+</script>
+</body>
+</html>
